@@ -18,7 +18,13 @@ main>footer,footer,#kiosk>p{color:#ffe3c9}
 input,select{background:#fffaf2;border-color:#d8bca7;color:#4a302a}
 #toast{background:#79241e;color:#fff4df}
 
- .shift-state{font-weight:750;padding:7px 12px;border-radius:999px;font-size:13px}.state-belum{background:#fff0bd;color:#775000}.state-shift{background:#d8f4df;color:#176b35}.state-pulang{background:#e5e7eb;color:#475569}.state-error{background:#fee2e2;color:#991b1b}</style></head><body><nav id="lokalin-nav" style="position:sticky;top:0;z-index:99999;background:#fff8ed;padding:10px 14px;display:flex;gap:12px;align-items:center;font:600 14px system-ui"><a style="color:#98291f;text-decoration:none" href="./index.html">← Dashboard</a><a style="color:#98291f;text-decoration:none" href="./absensi.html">Absensi</a><a style="color:#98291f;text-decoration:none" href="./stok.html">Stok</a></nav>
+ .shift-state{font-weight:750;padding:7px 12px;border-radius:999px;font-size:13px}.state-belum{background:#fff0bd;color:#775000}.state-shift{background:#d8f4df;color:#176b35}.state-pulang{background:#e5e7eb;color:#475569}.state-error{background:#fee2e2;color:#991b1b}
+/* Status hari sebelumnya, terpisah dari tombol absensi hari ini */
+.previous-attendance{margin-top:12px;padding:11px 12px;border-radius:11px;background:#fff8e9;border:1px solid #ead9c3;color:#60453b;font-size:13px;line-height:1.5}
+.previous-attendance strong{display:block;font-size:12px;color:#8b4d3c;margin-bottom:3px}
+.previous-attendance.is-error{background:#fff0ed;color:#923b32}
+@media(max-width:650px){.shift-state{font-size:11px;padding:6px 9px}.actions button{padding:12px 8px;font-size:14px}}
+</style></head><body><nav id="lokalin-nav" style="position:sticky;top:0;z-index:99999;background:#fff8ed;padding:10px 14px;display:flex;gap:12px;align-items:center;font:600 14px system-ui"><a style="color:#98291f;text-decoration:none" href="./index.html">← Dashboard</a><a style="color:#98291f;text-decoration:none" href="./absensi.html">Absensi</a><a style="color:#98291f;text-decoration:none" href="./stok.html">Stok</a></nav>
 <header><div><strong>lokalin.</strong><small>Employee attendance · Cafe management</small></div><button id="logout" class="secondary hidden">Keluar</button></header>
 <main>
 <section id="login" class="panel"><h1>Selamat datang</h1><p>Pilih akses untuk perangkat Lokalin Cafe.</p><div class="actions" style="margin-bottom:16px"><button type="button" id="chooseKiosk" class="primary">iPad Karyawan</button><button type="button" id="chooseOwner" class="secondary">Owner</button></div><div id="kioskLogin"><h2>iPad · Login Email & Password</h2><p class="muted">Masukkan email dan password akun iPad yang sudah terdaftar. Karyawan tidak perlu login ulang selama sesi tersimpan.</p><form id="kioskForm"><label>Email akun iPad</label><input id="kioskEmail" type="email" autocomplete="username" required placeholder="Email kiosk Supabase"><label>Password / PIN iPad</label><input id="kioskPin" type="password" autocomplete="current-password" required placeholder="PIN atau password akun iPad"><button id="kioskBtn" type="submit" class="primary" style="width:100%;margin-top:16px">Masuk ke iPad</button></form><p class="muted">PIN hanya untuk akun kiosk, bukan PIN setiap karyawan.</p></div><div id="ownerLogin" class="hidden"><h2>Login Owner</h2><form id="loginForm"><label>Email owner</label><input id="email" type="email" autocomplete="username" required><label>Password</label><input id="password" type="password" autocomplete="current-password" required><button id="loginBtn" type="submit" class="primary" style="width:100%;margin-top:16px">Masuk sebagai Owner</button></form></div><p id="loginError" role="alert" style="color:#a22f28"></p><p id="loginSuccess" role="status" style="color:#176b40"></p></section>
@@ -38,7 +44,38 @@ function notify(s){$('toast').textContent=s;$('toast').style.display='block';set
 function fail(e){notify(e?.message||String(e))}
 function showLoggedOut(){$('dwPanel').classList.add('hidden');role=null;employees=[];records=[];$('login').classList.add('hidden');$('app').classList.add('hidden');$('logout').classList.add('hidden')}
 function normalizeEmployee(e){return{id:String(e.id),name:String(e.name??e.nama??''),position:String(e.position??e.jabatan??e.role??''),active:e.active??e.is_active??true}}
-async function loadEmployees(){const {data,error}=await db.from('employees').select('*');if(error)throw new Error('Tidak dapat membaca daftar karyawan: '+error.message+'. Periksa kebijakan SELECT employees untuk akun kiosk/owner.');employees=(data||[]).map(normalizeEmployee).filter(e=>e.active&&e.name).sort((a,b)=>a.name.localeCompare(b.name));$('staff').innerHTML=employees.map(e=>`<article class="panel"><div class="row"><div><b>${escapeHtml(e.name)}</b><div class="muted">${escapeHtml(e.position)}</div></div><span class="shift-state state-belum" data-shift-state="${escapeHtml(e.id)}">Memuat…</span></div><div class="actions"><button class="primary" data-id="${escapeHtml(e.id)}" data-action="masuk">Absen Masuk</button><button class="secondary" data-id="${escapeHtml(e.id)}" data-action="pulang">Absen Pulang</button></div></article>`).join('');$('editEmp').innerHTML=employees.map(e=>`<option value="${escapeHtml(e.id)}">${escapeHtml(e.name)}</option>`).join('')}
+async function loadEmployees(){const {data,error}=await db.from('employees').select('*');if(error)throw new Error('Tidak dapat membaca daftar karyawan: '+error.message+'. Periksa kebijakan SELECT employees untuk akun kiosk/owner.');employees=(data||[]).map(normalizeEmployee).filter(e=>e.active&&e.name).sort((a,b)=>a.name.localeCompare(b.name));$('staff').innerHTML=employees.map(e=>`<article class="panel"><div class="row"><div><b>${escapeHtml(e.name)}</b><div class="muted">${escapeHtml(e.position)}</div></div><span class="shift-state state-belum" data-shift-state="${escapeHtml(e.id)}">Memuat…</span></div><div class="actions"><button class="primary" data-id="${escapeHtml(e.id)}" data-action="masuk">Absen Masuk</button><button class="secondary" data-id="${escapeHtml(e.id)}" data-action="pulang">Absen Pulang</button></div><div class="previous-attendance" data-previous="${escapeHtml(e.id)}"><strong>Kemarin</strong><span>Memuat riwayat…</span></div></article>`).join('');$('editEmp').innerHTML=employees.map(e=>`<option value="${escapeHtml(e.id)}">${escapeHtml(e.name)}</option>`).join('')}
+let previousAttendanceRequest=0;
+async function loadPreviousAttendance(){
+ if(role!=='kiosk'||!employees.length)return;
+ const request=++previousAttendanceRequest;
+ const date=yesterdayWita();
+ const boxes=[...document.querySelectorAll('[data-previous]')];
+ for(const box of boxes){box.classList.remove('is-error');box.querySelector('span').textContent='Memuat riwayat…'}
+ try{
+  // Riwayat KIOSK dibaca melalui RPC yang sudah digunakan oleh tabel riwayat.
+  const {data,error}=await db.rpc('kiosk_riwayat_absensi',{p_tanggal:date});
+  if(error)throw error;
+  if(request!==previousAttendanceRequest)return;
+  const rows=Array.isArray(data)?data:[];
+  const norm=v=>String(v??'').trim().toLocaleLowerCase('id-ID');
+  for(const e of employees){
+   const box=boxes.find(b=>b.dataset.previous===e.id);if(!box)continue;
+   const matching=rows.filter(r=>norm(r.nama??r.name)===norm(e.name) && !/^(dw|daily worker)$/i.test(String(r.jenis??r.kategori??'')));
+   const statuses=matching.map(r=>{
+    const shift=String(r.shift??'-');
+    const masuk=r.jam_masuk;
+    const pulang=r.jam_pulang;
+    return `${shift}: ${!masuk?'Tidak ada jam masuk':pulang?'Sudah pulang':'Sudah masuk, belum pulang'}`;
+   });
+   box.querySelector('span').textContent=statuses.length?statuses.join(' · '):'Tidak ada catatan absensi pada '+date;
+  }
+ }catch(err){
+  if(request!==previousAttendanceRequest)return;
+  for(const box of boxes){box.classList.add('is-error');box.querySelector('span').textContent='Riwayat belum bisa dibaca. Coba muat ulang.'}
+  console.warn('Gagal memuat status kemarin:',err);
+ }
+}
 function renderShiftStates(){
  const shift=$('shift').value;
  for(const e of employees){
@@ -61,8 +98,8 @@ async function loadShiftStates(){
  shiftRows=data||[];shiftStatusOk=true;renderShiftStates();$('status').textContent='Online · Status absensi diperbarui dari Supabase';
 }
 $('shift').addEventListener('change',renderShiftStates);
-setInterval(()=>{if(role==='kiosk'&&!busy)loadShiftStates()},30000);
-async function initialize(){const {data:{session}}=await db.auth.getSession();if(!session?.user){location.replace('./index.html');return}const user=session.user;const {data:access,error:accessError}=await db.from('app_roles').select('role').eq('user_id',user.id).single();if(accessError||!['owner','kiosk'].includes(access?.role)){showLoggedOut();$('login').classList.add('hidden');$('toast').textContent='Akun tidak memiliki akses Absensi. Hubungi owner.';$('toast').style.display='block';return}role=access.role;$('login').classList.add('hidden');$('app').classList.remove('hidden');$('logout').classList.add('hidden');$('kiosk').classList.toggle('hidden',role!=='kiosk');$('dwPanel').classList.remove('hidden');$('owner').classList.toggle('hidden',role!=='owner');$('role').textContent=role.toUpperCase();$('title').textContent=role==='owner'?'Dashboard Owner':'Absensi Karyawan';$('date').textContent=new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Makassar',dateStyle:'full'}).format(new Date());$('filterDate').value=dateWita();$('editDate').value=dateWita();$('staffHistoryDate').value=yesterdayWita();loadStaffHistory();try{await loadEmployees();if(role==='owner'){await loadRecords();await loadPayroll();try{await loadDwRecords()}catch(dwError){console.warn('Daily Worker belum siap:',dwError.message);$('dwStats').textContent='Data DW belum dapat dibaca: '+dwError.message}$('status').textContent='Online · Supabase tersambung'}else await loadShiftStates();fillDwStaff()}catch(e){$('status').textContent=e.message;fail(e)}}
+setInterval(()=>{if(role==='kiosk'&&!busy){loadShiftStates();loadPreviousAttendance()}},30000);
+async function initialize(){const {data:{session}}=await db.auth.getSession();if(!session?.user){location.replace('./index.html');return}const user=session.user;const {data:access,error:accessError}=await db.from('app_roles').select('role').eq('user_id',user.id).single();if(accessError||!['owner','kiosk'].includes(access?.role)){showLoggedOut();$('login').classList.add('hidden');$('toast').textContent='Akun tidak memiliki akses Absensi. Hubungi owner.';$('toast').style.display='block';return}role=access.role;$('login').classList.add('hidden');$('app').classList.remove('hidden');$('logout').classList.add('hidden');$('kiosk').classList.toggle('hidden',role!=='kiosk');$('dwPanel').classList.remove('hidden');$('owner').classList.toggle('hidden',role!=='owner');$('role').textContent=role.toUpperCase();$('title').textContent=role==='owner'?'Dashboard Owner':'Absensi Karyawan';$('date').textContent=new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Makassar',dateStyle:'full'}).format(new Date());$('filterDate').value=dateWita();$('editDate').value=dateWita();$('staffHistoryDate').value=yesterdayWita();loadStaffHistory();try{await loadEmployees();if(role==='owner'){await loadRecords();await loadPayroll();try{await loadDwRecords()}catch(dwError){console.warn('Daily Worker belum siap:',dwError.message);$('dwStats').textContent='Data DW belum dapat dibaca: '+dwError.message}$('status').textContent='Online · Supabase tersambung'}else {await loadShiftStates();await loadPreviousAttendance()}fillDwStaff()}catch(e){$('status').textContent=e.message;fail(e)}}
 function chooseLogin(mode){$('kioskLogin').classList.toggle('hidden',mode!=='kiosk');$('ownerLogin').classList.toggle('hidden',mode!=='owner');$('chooseKiosk').className=mode==='kiosk'?'primary':'secondary';$('chooseOwner').className=mode==='owner'?'primary':'secondary';$('loginError').textContent='';$('loginSuccess').textContent=''}
 $('chooseKiosk').onclick=()=>chooseLogin('kiosk');$('chooseOwner').onclick=()=>chooseLogin('owner');
 $('kioskForm').addEventListener('submit',async ev=>{ev.preventDefault();$('kioskBtn').disabled=true;$('loginError').textContent='';$('loginSuccess').textContent='';const {error}=await db.auth.signInWithPassword({email:$('kioskEmail').value.trim(),password:$('kioskPin').value});$('kioskBtn').disabled=false;$('kioskPin').value='';if(error){$('loginError').textContent='Email atau PIN tidak cocok. Pastikan password akun kiosk Supabase sudah disetel sesuai PIN.';return}await initialize();if(role!=='kiosk'){await db.auth.signOut();showLoggedOut();chooseLogin('kiosk');$('loginError').textContent='Akun ini bukan akun kiosk.'}});

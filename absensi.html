@@ -156,23 +156,46 @@ async function loadStaffHistory(){
   if(!data?.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=fields.length;td.textContent='Tidak ada catatan pada tanggal ini.';tr.append(td);target.append(tr);return;}
   for(const item of data){const tr=document.createElement('tr');for(const f of fields){const td=document.createElement('td');td.textContent=String(typeof f==='function'?f(item):(item[f]??'—'));tr.append(td)}target.append(tr)}
  };
+ const fields=['nama','jabatan','shift','jam_masuk','jam_pulang'];
+ const dwFields=['nama',r=>r.kategori==='internal'?'Karyawan':r.kategori==='external'?'Non-Karyawan':(r.kategori||'DW'),'shift','jam_masuk','jam_pulang'];
  try{
-  const [regular,daily]=await Promise.all([
-   db.from('absensi_harian').select('nama,jabatan,shift,jam_masuk,jam_pulang').eq('tanggal',date).order('nama'),
-   db.from('daily_worker_absensi').select('nama,kategori,shift,jam_masuk,jam_pulang').eq('tanggal',date).order('nama')
-  ]);
-  if(regular.error)throw Error('Absensi: '+regular.error.message);
-  addRows(rows,regular.data,['nama','jabatan','shift','jam_masuk','jam_pulang']);
-  if(daily.error){
-   $('staffHistoryNote').textContent='Data DW belum bisa dibaca oleh akun ini: '+daily.error.message+' · Owner perlu memeriksa izin SELECT (RLS) Supabase.';
-   addRows(dw,[],['nama','kategori','shift','jam_masuk','jam_pulang']);
+  if(role==='kiosk'){
+   // KIOSK memakai fungsi SECURITY DEFINER yang hanya memberi data riwayat tanpa upah.
+   const {data,error}=await db.rpc('kiosk_riwayat_absensi',{p_tanggal:date});
+   if(error)throw Error('Fungsi riwayat KIOSK: '+error.message);
+   const all=Array.isArray(data)?data:(Array.isArray(data?.rows)?data.rows:[]);
+   const normalize=r=>({
+    nama:r.nama??r.nama_karyawan??'—',
+    jabatan:r.jabatan??'—',
+    kategori:r.kategori??r.jenis_dw??'',
+    shift:r.shift??'—',
+    jam_masuk:r.jam_masuk??'—',
+    jam_pulang:r.jam_pulang??'—',
+    type:String(r.tipe??r.jenis??r.sumber??r.kategori_data??r.tabel??'').toLowerCase()
+   });
+   const normalized=all.map(normalize);
+   const isDw=r=>/daily.?worker|\bdw\b/.test(r.type)||(!r.type&&!!r.kategori);
+   const regular=normalized.filter(r=>!isDw(r));
+   const daily=normalized.filter(isDw);
+   addRows(rows,regular,fields);addRows(dw,daily,dwFields);
+   $('staffHistoryInfo').textContent=`${date} · ${regular.length} catatan absensi · ${daily.length} catatan DW`;
+   $('staffHistoryNote').textContent='Riwayat baca-saja melalui fungsi KIOSK. Upah DW tidak ditampilkan.';
   }else{
+   const [regular,daily]=await Promise.all([
+    db.from('absensi_harian').select('nama,jabatan,shift,jam_masuk,jam_pulang').eq('tanggal',date).order('nama'),
+    db.from('daily_worker_absensi').select('nama,kategori,shift,jam_masuk,jam_pulang').eq('tanggal',date).order('nama')
+   ]);
+   if(regular.error)throw Error('Absensi: '+regular.error.message);
+   if(daily.error)throw Error('DW: '+daily.error.message);
+   addRows(rows,regular.data,fields);addRows(dw,daily.data,dwFields);
+   $('staffHistoryInfo').textContent=`${date} · ${regular.data?.length||0} catatan absensi · ${daily.data?.length||0} catatan DW`;
    $('staffHistoryNote').textContent='Riwayat hanya untuk dilihat. Upah DW dan tombol edit tidak ditampilkan.';
-   addRows(dw,daily.data,['nama',r=>r.kategori==='internal'?'Karyawan':'Non-Karyawan','shift','jam_masuk','jam_pulang']);
   }
-  $('staffHistoryInfo').textContent=date+' · '+(regular.data?.length||0)+' catatan absensi · '+(daily.error?'DW tidak dapat dibaca':(daily.data?.length||0)+' catatan DW');
- }catch(e){$('staffHistoryInfo').textContent='Gagal memuat riwayat: '+e.message+' · Periksa izin baca (RLS) Supabase.'}
- finally{staffHistoryLoading=false}
+ }catch(e){
+  addRows(rows,[],fields);addRows(dw,[],dwFields);
+  $('staffHistoryInfo').textContent='Gagal memuat riwayat: '+e.message;
+  $('staffHistoryNote').textContent='Periksa nama parameter dan kolom hasil fungsi kiosk_riwayat_absensi di Supabase.';
+ }finally{staffHistoryLoading=false}
 }
 $('staffYesterday').onclick=()=>{$('staffHistoryDate').value=yesterdayWita();loadStaffHistory()};
 $('staffHistoryRefresh').onclick=loadStaffHistory;

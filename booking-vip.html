@@ -27,7 +27,7 @@ async function checkLogin(){
   const roles=await withTimeout(db.from('app_roles').select('role').eq('user_id',user.id).limit(1));
   if(roles.error)throw roles.error;
   role=roles.data?.[0]?.role||'';
-  if(!['owner','staff'].includes(role))throw Error('Akun ini belum diberi akses booking. Hubungi Owner.');
+  if(!['owner','staff','kiosk'].includes(role))throw Error('Akun ini belum diberi akses booking. Hubungi Owner.');
   $('authStatus').textContent='Masuk sebagai '+user.email+' · '+role;
   $('authHelp').classList.add('hidden');
   $('app').classList.remove('hidden');

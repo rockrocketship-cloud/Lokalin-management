@@ -13,14 +13,17 @@
 -- Anon tetap hanya bisa membaca menu_availability (kebijakan SELECT yang sudah ada).
 -- Tulisan hanya untuk pengguna login yang punya peran owner/staff di app_roles atau lokalin_stock_roles.
 --
--- Menu porsi reguler (foto menu Lokalin, "disajikan sepanjang jam buka")
--- dicek terhadap menu_availability pada 16 Nov 2026:
---   Sudah ada, harga berbeda, TIDAK diubah: Paru Rica 50000 (foto 35000),
---   Salted Egg Shrimp 45000 (foto 38000), Ayam Palleko 45000 (foto Ayam Palekko 35000),
---   Beef Blackpepper 65000 (foto Beef Black Pepper 40000), Nasi Goreng Lokalin 55000 (foto 38000).
---   Belum ada dan disisipkan bila nama belum ada: Salted Egg Chicken, Nasi Goreng Seafood,
---   Indomie Goreng Telur, Indomie Goreng Spesial, Roti Bakar Keju, Roti Bakar Coklat.
--- pos_products tidak bisa dibaca dengan kunci anon, jadi skrip ini tidak menulis ke kasir.
+-- Harga
+-- Kolom price tetap harga Normal dan tidak ditimpa.
+-- Kolom harga_reguler diisi dari foto menu porsi reguler.
+-- Menu baru yang belum punya harga Normal disimpan dengan price NULL.
+--
+-- Kasir (pos_products) hanya punya satu kolom price, dan halaman POS belum memilih porsi.
+-- Skrip ini tidak menulis ke pos_products agar harga yang sedang dipakai kasir tidak berubah.
+-- Langkah berikut: tambah harga_reguler di pos_products dan pilihan Normal/Reguler di kasir.
+--
+-- Bahan stok satu hubungan per menu, tidak dipisah per porsi. Foto hanya merinci bahan
+-- porsi reguler; porsi Normal memakai hubungan yang sama sampai owner memecahnya.
 
 begin;
 
@@ -46,7 +49,35 @@ $pre$;
 
 alter table public.menu_availability
   add column if not exists availability_mode text,
-  add column if not exists sync_level text;
+  add column if not exists sync_level text,
+  add column if not exists harga_reguler numeric;
+
+do $price_nullable$
+begin
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'menu_availability'
+      and column_name = 'price'
+      and is_nullable = 'NO'
+  ) then
+    alter table public.menu_availability alter column price drop not null;
+  end if;
+end
+$price_nullable$;
+
+create or replace function public.lokalin_menu_name_key(p text)
+returns text
+language sql
+immutable
+as $$
+  select trim(both from regexp_replace(
+    replace(replace(lower(coalesce(p, '')), 'palleko', 'palekko'), 'blackpepper', 'black pepper'),
+    '\s+',
+    ' ',
+    'g'
+  ));
+$$;
 
 update public.menu_availability
 set availability_mode = 'manual'
@@ -229,9 +260,10 @@ for each row
 when (old.availability_mode is distinct from new.availability_mode)
 execute function public.lokalin_menu_stock_sync_trigger();
 
--- Menu porsi reguler yang belum ada. Harga mengikuti foto. Tidak menimpa menu yang sudah tersimpan.
-insert into public.menu_availability (category, name, price, is_ready, stock_qty, sort_order)
-select v.category, v.name, v.price, true, 0,
+-- Menu porsi reguler yang belum ada. price (Normal) dikosongkan supaya owner mengisinya.
+-- harga_reguler mengikuti foto. Baris yang sudah ada, termasuk beda ejaan, tidak dibuat dobel.
+insert into public.menu_availability (category, name, price, harga_reguler, is_ready, stock_qty, sort_order)
+select v.category, v.name, null, v.harga_reguler, true, 0,
        (select coalesce(max(m.sort_order), 0) from public.menu_availability m) + v.n
 from (values
   (1, 'Rice Bowl', 'Salted Egg Chicken', 35000),
@@ -240,11 +272,29 @@ from (values
   (4, 'Indomie', 'Indomie Goreng Spesial', 28000),
   (5, 'Roti Bakar', 'Roti Bakar Keju', 25000),
   (6, 'Roti Bakar', 'Roti Bakar Coklat', 25000)
-) as v(n, category, name, price)
+) as v(n, category, name, harga_reguler)
 where not exists (
   select 1 from public.menu_availability m
-  where lower(m.name) = lower(v.name)
+  where public.lokalin_menu_name_key(m.name) = public.lokalin_menu_name_key(v.name)
 );
+
+-- Isi harga Reguler untuk 11 menu foto. Kolom price (Normal) tidak disentuh.
+update public.menu_availability m
+set harga_reguler = v.harga_reguler
+from (values
+  ('Paru Rica', 35000),
+  ('Salted Egg Shrimp', 38000),
+  ('Salted Egg Chicken', 35000),
+  ('Ayam Palekko', 35000),
+  ('Beef Black Pepper', 40000),
+  ('Nasi Goreng Lokalin', 38000),
+  ('Nasi Goreng Seafood', 40000),
+  ('Indomie Goreng Telur', 20000),
+  ('Indomie Goreng Spesial', 28000),
+  ('Roti Bakar Keju', 25000),
+  ('Roti Bakar Coklat', 25000)
+) as v(name, harga_reguler)
+where public.lokalin_menu_name_key(m.name) = public.lokalin_menu_name_key(v.name);
 
 -- TINJAUAN OWNER — hubungan menu ke bahan.
 -- qty di kolom ketiga adalah perkiraan "berapa satuan stok untuk satu porsi".

@@ -2383,15 +2383,15 @@ $('qrShow').onclick=async()=>{
   $('qrPanel').hidden=false;$('qrImage').replaceChildren();$('qrLink').hidden=true;
   $('qrNote').textContent='Menyiapkan QR…';
   try{
-    const {data,error}=await db.rpc('lokalin_member_qr',{p_code:code});
+    const {data,error}=await db.rpc('lokalin_issue_member_pass',{p_code:code});
     if(id!==qrGeneration)return;
-    if(error||!data)throw Error('QR belum tersedia. Periksa koneksi dan pemasangan member-qr.sql.');
-    const url=new URL(location.pathname,location.origin);
-    url.hash='kartu='+data;
+    if(error||!data)throw Error('QR belum tersedia. Periksa koneksi dan pemasangan qr-aman.sql.');
+    const url=new URL('./kartu.html',location.href);
+    url.hash='akses='+data;
     const qr=qrcode(0,'M');qr.addData(url.href);qr.make();
     $('qrImage').innerHTML=qr.createSvgTag({cellSize:6,margin:24,scalable:true});
-    $('qrNote').textContent='Pindai dengan kamera HP. Pemegang tautan bisa melihat nama dan saldo stamp.';
-    $('qrLink').href=url.href;$('qrLink').target='_blank';$('qrLink').rel='noopener';$('qrLink').hidden=false;
+    $('qrNote').textContent='Pindai di HP pelanggan lalu ketuk Buka saldo. QR berlaku sekali selama 5 menit.';
+    $('qrLink').hidden=true;
   }catch(e){if(id===qrGeneration)$('qrNote').textContent=e.message;}
 };
 function showCard(card){

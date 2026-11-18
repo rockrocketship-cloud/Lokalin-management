@@ -1,0 +1,61 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer"><meta name="robots" content="noindex,nofollow,noarchive">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-OjURnK67lShwviAZadhGDIpkgxbDT8A9VQLxt5NQ2cc='; style-src 'unsafe-inline'; connect-src https://kwhtqqrzeifmntdtugvg.supabase.co; base-uri 'none'; form-action 'none'">
+<title>Kartu Member · Lokalin Cafe</title><style>
+*{box-sizing:border-box}body{margin:0;background:#fff4df;color:#471e18;font:17px system-ui,sans-serif}main{max-width:450px;margin:12vh auto;padding:20px}article{padding:26px;border-radius:22px;background:#a80c19;color:#fff2da}small{letter-spacing:.12em}h1{font-size:30px;margin:.4em 0}#dots{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:18px 0}#dots span{aspect-ratio:1;border-radius:50%;background:#fff1d8;color:#990d18;display:grid;place-items:center;font-size:24px;font-weight:800}#dots span:last-child{font-size:10px;text-align:center}button{background:#fff0d8;color:#840915;border:none;border-radius:9px;min-height:48px;padding:10px 18px;font:inherit;font-weight:bold}button:disabled{opacity:.6}#msg{line-height:1.45}
+</style></head><body><main><article><small>LOKALIN CAFE</small><h1>Kartu Member</h1><div id="card" hidden><div id="dots" aria-hidden="true"></div><strong id="balance"></strong></div><p id="msg" role="status"></p><button id="action" hidden>Buka saldo</button></article></main><script>
+'use strict';
+const key='lokalin.member.session.v2';
+const uuid=/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
+const hash=location.hash;
+let pass=hash.startsWith('#akses=')?hash.slice(7):'';
+if(hash)history.replaceState(null,'',location.pathname);
+const el=id=>document.getElementById(id);
+const button=el('action');
+async function rpc(name,args){
+  const result=await fetch('https://kwhtqqrzeifmntdtugvg.supabase.co/rest/v1/rpc/'+name,{
+    method:'POST',credentials:'omit',cache:'no-store',referrerPolicy:'no-referrer',
+    headers:{'Content-Type':'application/json',apikey:'sb_publishable_JGQ9jpXgEb3IMl0YjY3Txg_cQKy02Fs'},
+    body:JSON.stringify(args)
+  });
+  if(!result.ok)throw Error();
+  return result.json();
+}
+function unavailable(){
+  el('card').hidden=true;button.hidden=true;
+  el('msg').textContent='Akses berakhir. Minta kasir menampilkan QR baru.';
+}
+async function openBalance(){
+  if(button.disabled)return;
+  button.disabled=true;
+  try{
+    let session=sessionStorage.getItem(key);
+    if(pass){
+      session=sessionStorage.getItem(key+'.pending.'+pass)||crypto.randomUUID();
+      sessionStorage.setItem(key+'.pending.'+pass,session);
+      const claimed=await rpc('lokalin_claim_member_pass',{p_pass:pass,p_session:session});
+      if(!claimed){
+        // A response may have been lost after this tab successfully claimed the pass.
+        if(!Number.isInteger(await rpc('lokalin_guest_balance',{p_session:session}))){
+          sessionStorage.removeItem(key+'.pending.'+pass);unavailable();return;
+        }
+      }
+      sessionStorage.setItem(key,session);sessionStorage.removeItem(key+'.pending.'+pass);pass='';
+    }
+    if(!session){unavailable();return;}
+    const n=await rpc('lokalin_guest_balance',{p_session:session});
+    if(!Number.isInteger(n)){sessionStorage.removeItem(key);unavailable();return;}
+    el('dots').replaceChildren();
+    for(let i=0;i<8;i++){const d=document.createElement('span');d.textContent=i===7?'FREE DRINK':i<n?'✓':'';el('dots').append(d);}
+    el('balance').textContent=n+' stamp · '+Math.floor(n/7)+' minuman bisa ditukar';
+    el('card').hidden=false;el('msg').textContent='7 stamp untuk 1 minuman gratis.';
+    button.textContent='Perbarui saldo';button.hidden=false;
+  }catch{el('card').hidden=true;el('msg').textContent='Saldo belum bisa dimuat. Periksa koneksi dan izinkan penyimpanan browser, lalu coba lagi.';button.hidden=false;}
+  finally{button.disabled=false;}
+}
+button.onclick=openBalance;
+if(hash){
+  if(uuid.test(pass)){el('msg').textContent='Ketuk untuk membuka saldo stamp di tab ini.';button.hidden=false;}
+  else unavailable();
+}else openBalance();
+</script></body></html>

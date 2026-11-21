@@ -16,6 +16,8 @@ const synth = {
   getVoices: () => [{name:'Damayanti', lang:'id-ID'}],
   speak: u => { if(u.volume !== 0) diucap.push(u.text); },
   cancel: () => {},
+  resume: () => {},
+  speaking: false,
 };
 global.speechSynthesis = synth; window.speechSynthesis = synth;
 
@@ -34,6 +36,10 @@ cek('belum aktif', M.aktif(), false);
 
 // 2. setelah aktifkan() -> mengucapkan
 cek('aktifkan() berhasil', M.aktifkan(), true);
+// pembuka harus kata nyata bervolume normal: utterance volume 0 membuat
+// Safari iOS bisu untuk ucapan berikutnya
+cek('pembuka pakai kata nyata', diucap.at(-1), 'Siap');
+diucap = [];
 cek('aktif', M.aktif(), true);
 cek('suara id-ID terpilih', M.suara(), 'Damayanti');
 cek('ucapan dipakai', await M.panggil('Meeting Room Lantai 1'), 'ucapan');
@@ -56,6 +62,30 @@ cek('klip dipakai, ucapan diam', diucap.length, n);
 // 6. perangkat tanpa Web Speech -> diam, bukan error
 delete window.speechSynthesis;
 cek('tanpa Web Speech: diam', await M.panggil('Meeting Room Lantai 9'), 'diam');
+
+// 7. pemilihan suara & kecepatan
+window.speechSynthesis = synth;
+const store = {};
+global.localStorage = {
+  getItem: k => (k in store ? store[k] : null),
+  setItem: (k, v) => { store[k] = String(v); },
+};
+synth.getVoices = () => [
+  {name:'Damayanti', lang:'id-ID', voiceURI:'com.apple.voice.compact.id-ID.Damayanti'},
+  {name:'Damayanti (Premium)', lang:'id-ID', voiceURI:'com.apple.voice.premium.id-ID.Damayanti'},
+  {name:'Samantha', lang:'en-US', voiceURI:'com.apple.voice.compact.en-US.Samantha'},
+];
+M.aktifkan();
+cek('suara id didahulukan', M.daftarSuara()[0].lang, 'id-ID');
+cek('premium dipilih otomatis', M.suara(), 'Damayanti (Premium)');
+cek('ganti suara', M.setSuara('com.apple.voice.compact.id-ID.Damayanti'), true);
+cek('suara berganti', M.suara(), 'Damayanti');
+cek('pilihan tersimpan', store['lokalin.suara.voiceURI'], 'com.apple.voice.compact.id-ID.Damayanti');
+cek('voiceURI asing ditolak', M.setSuara('tidak-ada'), false);
+cek('kecepatan valid', M.setKecepatan(1.1), true);
+cek('kecepatan terpakai', M.kecepatan(), 1.1);
+cek('kecepatan di luar batas ditolak', M.setKecepatan(9), false);
+cek('kecepatan tetap', M.kecepatan(), 1.1);
 
 console.log(gagal ? `\n${gagal} uji GAGAL` : '\nsemua uji lulus');
 process.exit(gagal ? 1 : 0);

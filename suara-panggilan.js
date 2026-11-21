@@ -106,14 +106,33 @@ export function aktifkan() {
   diizinkan = true;
   if (!('speechSynthesis' in window)) return false;
   try {
-    const u = new SpeechSynthesisUtterance(' ');
-    u.volume = 0;
-    speechSynthesis.speak(u);
     pilihSuaraID();
+    // Jangan pakai utterance volume 0 sebagai pembuka: di Safari iOS volume
+    // nol bisa "nyangkut" dan membuat semua ucapan berikutnya bisu. Satu kata
+    // pendek bervolume normal membuka izinnya tanpa efek samping itu.
+    const u = new SpeechSynthesisUtterance('Siap');
+    u.lang = 'id-ID';
+    if (suaraID) u.voice = suaraID;
+    speechSynthesis.speak(u);
+    mulaiJagaHidup();
   } catch (_) {
     return false;
   }
   return true;
+}
+
+// Safari dan Chrome sama-sama bisa menidurkan mesin ucapan pada halaman yang
+// dibiarkan terbuka lama — persis cara iPad kasir dipakai. resume() berkala
+// menjaganya tetap siap; tanpa ini panggilan sore hari bisa bisu padahal
+// pagi tadi normal.
+let jagaHidup = null;
+function mulaiJagaHidup() {
+  if (jagaHidup || !('speechSynthesis' in window)) return;
+  jagaHidup = setInterval(() => {
+    try {
+      if (!speechSynthesis.speaking) speechSynthesis.resume();
+    } catch (_) {}
+  }, 10000);
 }
 
 /** Apakah pengumuman suara sudah diizinkan dan didukung. */
@@ -129,6 +148,11 @@ export function suara() {
 function ucap(teks, kali) {
   if (!('speechSynthesis' in window)) return false;
   try {
+    // Daftar suara kadang baru terisi setelah halaman berjalan beberapa saat.
+    if (!suaraID) pilihSuaraID();
+    // resume() terpisah: di browser yang tidak punya atau menolaknya, ucapan
+    // tetap harus jalan.
+    try { speechSynthesis.resume(); } catch (_) {}
     for (let i = 0; i < kali; i++) {
       const u = new SpeechSynthesisUtterance(teks);
       u.lang = 'id-ID';

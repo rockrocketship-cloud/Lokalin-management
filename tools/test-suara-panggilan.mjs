@@ -16,6 +16,8 @@ const synth = {
   getVoices: () => [{name:'Damayanti', lang:'id-ID'}],
   speak: u => { if(u.volume !== 0) diucap.push(u.text); },
   cancel: () => {},
+  resume: () => {},
+  speaking: false,
 };
 global.speechSynthesis = synth; window.speechSynthesis = synth;
 
@@ -34,6 +36,10 @@ cek('belum aktif', M.aktif(), false);
 
 // 2. setelah aktifkan() -> mengucapkan
 cek('aktifkan() berhasil', M.aktifkan(), true);
+// pembuka harus kata nyata bervolume normal: utterance volume 0 membuat
+// Safari iOS bisu untuk ucapan berikutnya
+cek('pembuka pakai kata nyata', diucap.at(-1), 'Siap');
+diucap = [];
 cek('aktif', M.aktif(), true);
 cek('suara id-ID terpilih', M.suara(), 'Damayanti');
 cek('ucapan dipakai', await M.panggil('Meeting Room Lantai 1'), 'ucapan');

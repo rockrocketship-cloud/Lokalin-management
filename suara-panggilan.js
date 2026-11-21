@@ -115,6 +115,11 @@ export function aktifkan() {
     if (suaraID) u.voice = suaraID;
     speechSynthesis.speak(u);
     mulaiJagaHidup();
+    // Dibuat di dalam ketukan supaya langsung berstatus 'running'.
+    try {
+      ctx ??= new (window.AudioContext || window.webkitAudioContext)();
+      ctx.resume();
+    } catch (_) {}
   } catch (_) {
     return false;
   }
@@ -166,6 +171,99 @@ function ucap(teks, kali) {
   }
 }
 
+// --- Rekaman sendiri -------------------------------------------------------
+//
+// Jalur paling andal di Safari iOS. Ucapan Web Speech sering bisu pada halaman
+// yang dibiarkan terbuka lama, sedangkan AudioContext yang sudah dibuka oleh
+// satu ketukan tetap bisa memutar suara berjam-jam sesudahnya — persis cara
+// bel di halaman ini bekerja. Jadi pengumuman direkam sekali dengan suara
+// manusia, lalu diputar lewat context yang sama.
+
+const DB = 'lokalin-suara', TOKO = 'rekaman';
+let ctx = null;
+
+function buka() {
+  return new Promise((resolve, reject) => {
+    const r = indexedDB.open(DB, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore(TOKO);
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+}
+
+function transaksi(mode, fn) {
+  return buka().then(db => new Promise((resolve, reject) => {
+    const t = db.transaction(TOKO, mode);
+    const permintaan = fn(t.objectStore(TOKO));
+    permintaan.onsuccess = () => resolve(permintaan.result);
+    permintaan.onerror = () => reject(permintaan.error);
+  }));
+}
+
+/** Simpan rekaman pengumuman untuk satu ruang. */
+export async function simpanRekaman(ruang, blob) {
+  const buf = await blob.arrayBuffer();
+  await transaksi('readwrite', t => t.put(buf, slug(ruang)));
+  return true;
+}
+
+/** Hapus rekaman satu ruang. */
+export async function hapusRekaman(ruang) {
+  await transaksi('readwrite', t => t.delete(slug(ruang)));
+  return true;
+}
+
+/** ArrayBuffer rekaman, atau null. */
+export async function ambilRekaman(ruang) {
+  try {
+    return (await transaksi('readonly', t => t.get(slug(ruang)))) || null;
+  } catch (_) {
+    return null;
+  }
+}
+
+/** Apakah ruang ini sudah punya rekaman. */
+export async function adaRekaman(ruang) {
+  return (await ambilRekaman(ruang)) !== null;
+}
+
+// Diputar lewat AudioContext, bukan <audio>: context yang dibuka saat ketukan
+// tetap berbunyi untuk kejadian yang datang jauh sesudahnya.
+async function putarBuffer(arrayBuffer, kali) {
+  if (!ctx) throw new Error('audio belum diaktifkan');
+  if (ctx.state === 'suspended') await ctx.resume();
+  // decodeAudioData merusak buffer aslinya, jadi salin dulu tiap pemutaran.
+  const audio = await ctx.decodeAudioData(arrayBuffer.slice(0));
+  for (let i = 0; i < kali; i++) {
+    await new Promise(resolve => {
+      const src = ctx.createBufferSource();
+      src.buffer = audio;
+      src.connect(ctx.destination);
+      src.onended = resolve;
+      src.start();
+    });
+  }
+  return true;
+}
+
+/** Perekam mikrofon; butuh HTTPS dan izin pengguna. */
+export async function mulaiRekam() {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const potongan = [];
+  const mr = new MediaRecorder(stream);
+  mr.ondataavailable = e => { if (e.data.size) potongan.push(e.data); };
+  mr.start();
+  return {
+    stop: () => new Promise(resolve => {
+      mr.onstop = () => {
+        stream.getTracks().forEach(t => t.stop());
+        resolve(new Blob(potongan, { type: mr.mimeType || 'audio/mp4' }));
+      };
+      mr.stop();
+    }),
+  };
+}
+
 function klip(path, kali) {
   return new Promise((resolve, reject) => {
     let sisa = kali;
@@ -194,6 +292,13 @@ export async function panggil(ruang, opsi = {}) {
   terakhir.set(kunci, now);
 
   const kali = opsi.ulang ?? ULANG;
+
+  // Urutan: rekaman sendiri -> klip di audio/ -> ucapan perangkat.
+  try {
+    const rekaman = await ambilRekaman(ruang);
+    if (rekaman) { await putarBuffer(rekaman, kali); return 'rekaman'; }
+  } catch (_) {}
+
   try {
     await klip(`${BASE}/panggilan-${kunci}${EXT}`, kali);
     return 'klip';

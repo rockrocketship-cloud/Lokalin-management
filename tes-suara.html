@@ -59,6 +59,15 @@ var UJI=[
   ket:'Diucapkan 3 detik SETELAH ketukan — meniru panggilan sungguhan yang datang saat tidak ada yang menyentuh layar. Ini uji paling penting.',
   jalan:function(){setTimeout(function(){var u=new SpeechSynthesisUtterance(TEKS);u.lang='id-ID';var v=suaraID();if(v)u.voice=v;speechSynthesis.resume();speechSynthesis.speak(u)},3000)}},
 
+ {id:'H', judul:'H · Nada tertunda 10 detik (WebAudio)',
+  ket:'INI UJI PALING MENENTUKAN. Context dibuka sekarang, nadanya dibunyikan 10 detik kemudian tanpa sentuhan apa pun. Kalau ini berbunyi, jalur rekaman suara akan bekerja walaupun ucapan robot gagal. Jangan kunci layar; biarkan halaman terbuka.',
+  jalan:function(){try{var c=new(window.AudioContext||window.webkitAudioContext)();c.resume();
+    setTimeout(function(){try{c.resume();var o=c.createOscillator(),g=c.createGain();o.frequency.value=660;
+    g.gain.setValueAtTime(.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(.25,c.currentTime+.03);
+    g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.6);o.connect(g).connect(c.destination);
+    o.start();o.stop(c.currentTime+.65);catat('H: nada dibunyikan, state='+c.state)}catch(e){catat('H error: '+e.message)}},10000);
+    catat('H: menunggu 10 detik...')}catch(e){catat('H error: '+e.message)}}},
+
  {id:'G', judul:'G · Bunyi bel (WebAudio)',
   ket:'Bukan ucapan, tapi bel yang sudah dipakai aplikasi. Kalau ini pun diam, masalahnya di volume atau mode senyap, bukan di kode.',
   jalan:function(){try{var c=new(window.AudioContext||window.webkitAudioContext)();c.resume();var o=c.createOscillator(),g=c.createGain();o.frequency.value=880;g.gain.setValueAtTime(.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(.25,c.currentTime+.03);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.4);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+.45)}catch(e){catat('G error: '+e.message)}}}

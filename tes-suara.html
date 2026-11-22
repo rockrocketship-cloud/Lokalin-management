@@ -1,0 +1,126 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#a72220"><title>Tes Suara | Lokalin</title><style>
+*{box-sizing:border-box}body{margin:0;background:#fff8ef;color:#4d2823;font-family:system-ui,-apple-system,sans-serif}
+header{background:#ac2821;color:#fff8ef;padding:18px}header a{color:#fff8ef}
+main{max-width:720px;margin:auto;padding:18px}
+h1{margin:0 0 4px;font-size:22px}h2{font-size:16px;margin:0 0 6px}
+p{line-height:1.5}.muted{color:#806e65}
+.uji{background:#fff;border:2px solid #e7d8ca;border-radius:16px;padding:16px;margin-bottom:14px}
+button{border:0;border-radius:12px;background:#a72220;color:#fff;padding:14px 18px;font-weight:700;font-size:16px;cursor:pointer;width:100%;margin-top:10px}
+button.ya{background:#2f7d32;width:auto;padding:10px 16px;margin-right:8px}
+button.tidak{background:#8a6f66;width:auto;padding:10px 16px}
+.jawab{margin-top:10px}
+#info{background:#fff;border:2px solid #e7d8ca;border-radius:16px;padding:14px;margin-bottom:16px;font-size:14px}
+#info b{display:inline-block;min-width:150px}
+#hasil{background:#2a1b17;color:#ffe9c7;border-radius:14px;padding:14px;font-family:ui-monospace,monospace;font-size:13px;white-space:pre-wrap;margin-top:16px}
+.ok{color:#7bbf6a}.no{color:#ff9b8a}
+</style></head><body>
+<header><a href="./room-service.html">← Room Service</a><h1>🔎 Tes Suara Safari</h1><div>Cari tahu cara mana yang berbunyi di perangkat ini</div></header>
+<main>
+<div id="info">Memeriksa perangkat…</div>
+<p class="muted">Tekan tiap tombol satu per satu, lalu jawab <b>Terdengar</b> atau <b>Tidak</b>. Pastikan volume iPad tidak nol dan mode senyap tidak aktif. Setelah semua dijawab, salin ringkasan di bawah.</p>
+<div id="ujian"></div>
+<div id="hasil">Belum ada hasil.</div>
+<button id="salin" style="background:#6b4a43">Salin ringkasan</button>
+</main>
+<script>
+(function(){
+var TEKS='Panggilan dari Meeting Room Lantai 1';
+var punya='speechSynthesis' in window;
+var hasil={};
+
+function suaraID(){
+  if(!punya) return null;
+  var v=speechSynthesis.getVoices();
+  return v.filter(function(x){return x.lang&&x.lang.toLowerCase().indexOf('id')===0})[0]||null;
+}
+
+var UJI=[
+ {id:'A', judul:'A · Ucapan polos',
+  ket:'speak() langsung di dalam ketukan, tanpa pengaturan apa pun. Paling sederhana.',
+  jalan:function(){var u=new SpeechSynthesisUtterance(TEKS);speechSynthesis.speak(u)}},
+
+ {id:'B', judul:'B · Ucapan + lang id-ID',
+  ket:'Sama, tapi bahasa diset id-ID tanpa memilih objek voice.',
+  jalan:function(){var u=new SpeechSynthesisUtterance(TEKS);u.lang='id-ID';speechSynthesis.speak(u)}},
+
+ {id:'C', judul:'C · Ucapan + voice Damayanti',
+  ket:'Objek voice id-ID dipasang langsung. Ini yang dipakai aplikasi sekarang.',
+  jalan:function(){var u=new SpeechSynthesisUtterance(TEKS);u.lang='id-ID';var v=suaraID();if(v)u.voice=v;speechSynthesis.speak(u)}},
+
+ {id:'D', judul:'D · cancel() dulu, baru speak()',
+  ket:'Sebagian perangkat butuh antrean dibersihkan; sebagian lain justru jadi bisu karenanya.',
+  jalan:function(){speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(TEKS);u.lang='id-ID';speechSynthesis.speak(u)}},
+
+ {id:'E', judul:'E · resume() dulu, baru speak()',
+  ket:'Membangunkan mesin ucapan yang tertidur.',
+  jalan:function(){speechSynthesis.resume();var u=new SpeechSynthesisUtterance(TEKS);u.lang='id-ID';speechSynthesis.speak(u)}},
+
+ {id:'F', judul:'F · Tertunda 3 detik',
+  ket:'Diucapkan 3 detik SETELAH ketukan — meniru panggilan sungguhan yang datang saat tidak ada yang menyentuh layar. Ini uji paling penting.',
+  jalan:function(){setTimeout(function(){var u=new SpeechSynthesisUtterance(TEKS);u.lang='id-ID';var v=suaraID();if(v)u.voice=v;speechSynthesis.resume();speechSynthesis.speak(u)},3000)}},
+
+ {id:'H', judul:'H · Nada tertunda 10 detik (WebAudio)',
+  ket:'INI UJI PALING MENENTUKAN. Context dibuka sekarang, nadanya dibunyikan 10 detik kemudian tanpa sentuhan apa pun. Kalau ini berbunyi, jalur rekaman suara akan bekerja walaupun ucapan robot gagal. Jangan kunci layar; biarkan halaman terbuka.',
+  jalan:function(){try{var c=new(window.AudioContext||window.webkitAudioContext)();c.resume();
+    setTimeout(function(){try{c.resume();var o=c.createOscillator(),g=c.createGain();o.frequency.value=660;
+    g.gain.setValueAtTime(.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(.25,c.currentTime+.03);
+    g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.6);o.connect(g).connect(c.destination);
+    o.start();o.stop(c.currentTime+.65);catat('H: nada dibunyikan, state='+c.state)}catch(e){catat('H error: '+e.message)}},10000);
+    catat('H: menunggu 10 detik...')}catch(e){catat('H error: '+e.message)}}},
+
+ {id:'G', judul:'G · Bunyi bel (WebAudio)',
+  ket:'Bukan ucapan, tapi bel yang sudah dipakai aplikasi. Kalau ini pun diam, masalahnya di volume atau mode senyap, bukan di kode.',
+  jalan:function(){try{var c=new(window.AudioContext||window.webkitAudioContext)();c.resume();var o=c.createOscillator(),g=c.createGain();o.frequency.value=880;g.gain.setValueAtTime(.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(.25,c.currentTime+.03);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.4);o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+.45)}catch(e){catat('G error: '+e.message)}}}
+];
+
+function catat(s){var h=document.getElementById('hasil');if(h.textContent==='Belum ada hasil.')h.textContent='';h.textContent+=s+'\n'}
+
+function ringkas(){
+  var v=punya?speechSynthesis.getVoices():[];
+  var id=v.filter(function(x){return x.lang&&x.lang.toLowerCase().indexOf('id')===0});
+  var baris=['UA: '+navigator.userAgent,
+    'speechSynthesis: '+(punya?'ada':'TIDAK ADA'),
+    'jumlah suara: '+v.length,
+    'suara id-ID: '+(id.map(function(x){return x.name}).join(', ')||'tidak ada')];
+  for(var i=0;i<UJI.length;i++){var u=UJI[i];baris.push(u.id+': '+(hasil[u.id]||'belum dijawab'))}
+  return baris.join('\n');
+}
+
+function tampilInfo(){
+  var v=punya?speechSynthesis.getVoices():[];
+  var id=v.filter(function(x){return x.lang&&x.lang.toLowerCase().indexOf('id')===0});
+  document.getElementById('info').innerHTML=
+    '<div><b>Web Speech API</b> '+(punya?'<span class="ok">tersedia</span>':'<span class="no">tidak tersedia</span>')+'</div>'+
+    '<div><b>Jumlah suara</b> '+v.length+'</div>'+
+    '<div><b>Suara Bahasa Indonesia</b> '+(id.length?'<span class="ok">'+id.map(function(x){return x.name}).join(', ')+'</span>':'<span class="no">belum ada — unduh di Settings → Accessibility → Spoken Content → Voices → Indonesia</span>')+'</div>';
+}
+
+var wadah=document.getElementById('ujian');
+UJI.forEach(function(u){
+  var d=document.createElement('div');d.className='uji';
+  d.innerHTML='<h2>'+u.judul+'</h2><p class="muted">'+u.ket+'</p>';
+  var b=document.createElement('button');b.textContent='▶︎ Jalankan '+u.id;
+  var jawab=document.createElement('div');jawab.className='jawab';
+  b.onclick=function(){
+    try{u.jalan()}catch(e){catat(u.id+' error: '+e.message)}
+    jawab.innerHTML='';
+    var ya=document.createElement('button');ya.className='ya';ya.textContent='✓ Terdengar';
+    var no=document.createElement('button');no.className='tidak';no.textContent='✗ Tidak';
+    ya.onclick=function(){hasil[u.id]='TERDENGAR';jawab.innerHTML='<span class="muted">dicatat: terdengar</span>';document.getElementById('hasil').textContent=ringkas()};
+    no.onclick=function(){hasil[u.id]='tidak';jawab.innerHTML='<span class="muted">dicatat: tidak</span>';document.getElementById('hasil').textContent=ringkas()};
+    jawab.append(ya,no);
+  };
+  d.append(b,jawab);wadah.append(d);
+});
+
+document.getElementById('salin').onclick=function(){
+  var t=ringkas();
+  navigator.clipboard.writeText(t).then(function(){document.getElementById('salin').textContent='Tersalin ✓'})
+    .catch(function(){document.getElementById('hasil').textContent=t});
+};
+
+tampilInfo();
+if(punya)speechSynthesis.onvoiceschanged=tampilInfo;
+setTimeout(tampilInfo,800);
+})();
+</script></body></html>

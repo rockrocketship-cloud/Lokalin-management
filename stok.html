@@ -62,10 +62,12 @@ label{font-size:13px;font-weight:650;margin-top:10px}
  #content td:nth-child(2){grid-column:1/-1;font-weight:650;grid-row:1}
 }
 @media(min-width:760px){.stock-list{grid-template-columns:repeat(2,minmax(0,1fr))}.stock-empty{grid-column:1/-1}.cards{grid-template-columns:repeat(4,minmax(0,1fr))}.cards .value-card{grid-column:auto;display:block}.cards .value-card b{margin-top:5px}.stock-filters{grid-template-columns:minmax(0,1fr) 180px}}
-</style></head><body><main class="wrap"><nav class="top-nav" aria-label="Navigasi Lokalin Management" data-version="nav-20261113-32"><a href="./index.html">← Dashboard</a><a href="./absensi.html">Absensi</a><a href="./stok.html" aria-current="page">Stok</a><a href="./ketersediaan-menu.html">Menu</a><a href="./payroll.html" id="payrollNav" class="hide">Payroll</a></nav><header><div class="stock-brand"><img src="./logo-lokalin.png" alt="lokalin cafe" width="1000" height="500"><h1>Stok Barang</h1></div><details><summary>Akun</summary><span id="who">Belum terhubung</span> <button id="logout" class="hide">Keluar</button></details></header><section id="setup"><p id="preview-warning" style="display:none;color:#9c251e;font-weight:600">File ini sedang dibuka sebagai preview. Untuk login dan sinkronisasi, buka aplikasi melalui GitHub Pages.</p><h2>Hubungkan Supabase</h2><p>Gunakan publishable key, bukan secret/service_role.</p><label>Project URL<input id="url" value="https://kwhtqqrzeifmntdtugvg.supabase.co"></label><label>Publishable key<input id="key" value="sb_publishable_JGQ9jpXgEb3IMl0YjY3Txg_cQKy02Fs" placeholder="sb_publishable_..."></label><button id="connect">Hubungkan</button></section><section id="login" class="hide"><h2>Login</h2><form id="loginForm"><label>Email<input id="email" type="email" required></label><label>Password<input id="password" type="password" required></label><button>Masuk</button></form></section><div id="app" class="hide"><nav class="division-tabs" aria-label="Pilih divisi"><button type="button" data-division="Bar" class="selected">Bar</button><button type="button" data-division="Kitchen">Kitchen</button></nav><div class="cards" id="cards"></div><nav class="tabs" aria-label="Menu stok"><button data-tab="stock">Stok</button><button data-tab="move">Transaksi</button><button data-tab="history">Riwayat</button><button data-tab="report">Laporan</button></nav><section id="content"></section><section id="editor" class="hide" aria-label="Edit barang"></section></div><p id="message" role="status" aria-live="polite"></p><small>Lokalin Cafe · Stok Bar & Kitchen</small></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
+
+.tl-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 8px}.tl-cards>div{background:#fff;border:1px solid #eadfd4;border-radius:12px;padding:12px 10px;font-size:12px;line-height:1.4}.tl-cards b{display:block;font-size:22px;margin-top:5px;font-variant-numeric:tabular-nums}.tl-cards .bad{background:#fdeceb;color:#9d2420;border-color:#f3cfcb}.tl-note:not(:empty){background:#fff8e9;border:1px solid #e8d4b9;border-radius:10px;padding:12px;color:#79241e;font-size:14px}#telurPanel .hint{color:#806357;font-size:13px;line-height:1.45;margin:6px 0}#telurPanel h3{margin:18px 0 6px}.tl-row{display:grid;grid-template-columns:minmax(0,1fr) 90px auto;gap:6px;align-items:center;padding:4px 0}.tl-row input{margin:0}.tl-sale{display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:8px;align-items:center;padding:4px 0;border-top:1px solid #f1e6dd}.tl-sale input{margin:0}.tl-row .acts{display:flex;gap:4px}@media(min-width:760px){.tl-cards{grid-template-columns:repeat(4,minmax(0,1fr))}.tl-cards.tl-three{grid-template-columns:repeat(3,minmax(0,1fr))}}
+</style></head><body><main class="wrap"><nav class="top-nav" aria-label="Navigasi Lokalin Management" data-version="nav-20261113-32"><a href="./index.html">← Dashboard</a><a href="./absensi.html">Absensi</a><a href="./stok.html" aria-current="page">Stok</a><a href="./ketersediaan-menu.html">Menu</a><a href="./payroll.html" id="payrollNav" class="hide">Payroll</a></nav><header><div class="stock-brand"><img src="./logo-lokalin.png" alt="lokalin cafe" width="1000" height="500"><h1>Stok Barang</h1></div><details><summary>Akun</summary><span id="who">Belum terhubung</span> <button id="logout" class="hide">Keluar</button></details></header><section id="setup"><p id="preview-warning" style="display:none;color:#9c251e;font-weight:600">File ini sedang dibuka sebagai preview. Untuk login dan sinkronisasi, buka aplikasi melalui GitHub Pages.</p><h2>Hubungkan Supabase</h2><p>Gunakan publishable key, bukan secret/service_role.</p><label>Project URL<input id="url" value="https://kwhtqqrzeifmntdtugvg.supabase.co"></label><label>Publishable key<input id="key" value="sb_publishable_JGQ9jpXgEb3IMl0YjY3Txg_cQKy02Fs" placeholder="sb_publishable_..."></label><button id="connect">Hubungkan</button></section><section id="login" class="hide"><h2>Login</h2><form id="loginForm"><label>Email<input id="email" type="email" required></label><label>Password<input id="password" type="password" required></label><button>Masuk</button></form></section><div id="app" class="hide"><nav class="division-tabs" aria-label="Pilih divisi"><button type="button" data-division="Bar" class="selected">Bar</button><button type="button" data-division="Kitchen">Kitchen</button></nav><div class="cards" id="cards"></div><nav class="tabs" aria-label="Menu stok"><button data-tab="stock">Stok</button><button data-tab="move">Transaksi</button><button data-tab="history">Riwayat</button><button data-tab="report">Laporan</button></nav><section id="content"></section><section id="telurPanel" class="hide" aria-label="Kontrol Telur"><h2>Kontrol Telur</h2><p id="tlMissing" class="hide hint">Barang Telur belum ada di stok Kitchen. Tambahkan barang bernama Telur (satuan pcs) dulu.</p><div id="tlBody"><p id="tlStatus" class="tl-note" role="status"></p><div class="tl-cards"><div>Stok Telur sekarang<b id="tlLive">-</b></div><div>Stok awal<b id="tlAwal">-</b></div><div>Telur masuk<b id="tlMasuk">-</b></div><div>Stok akhir<b id="tlAkhir">-</b></div></div><p class="hint">Angka ini diambil dari stok dan transaksi Kitchen untuk tanggal terpilih (WITA). Tidak diketik ulang.</p><label>Tanggal<input id="tlTanggal" type="date"></label><div id="tlTables"><div class="grid"><div><label>Telur masuk (butir)<input id="tlMasukIn" type="number" min="0" step="1" inputmode="numeric"></label><button type="button" id="tlMasukBtn">Catat masuk</button></div><div><label>Stok akhir hitung fisik (butir)<input id="tlAkhirIn" type="number" min="0" step="1" inputmode="numeric"></label><button type="button" id="tlAkhirBtn">Catat stok akhir</button></div></div><p class="hint">Pencatatan stok hanya untuk hari ini. Catat rusak lebih dulu, lalu hitung fisik stok akhir, supaya rusak tidak terhitung dua kali.</p><div class="grid"><label>Rusak / dibuang (butir)<input id="tlRusak" type="number" min="0" step="1" inputmode="numeric" value="0"></label><label>Alasan rusak (wajib jika rusak lebih dari 0)<input id="tlAlasan" type="text"></label></div><h3>Porsi terjual hari ini</h3><p class="hint">Diisi manual: belum ada data penjualan per menu di sistem. Menu diambil dari tabel resep di bawah.</p><div id="tlSales"></div><button type="button" id="tlSave">Simpan rusak dan catatan harian</button><h3>Hasil hitung</h3><div class="tl-cards tl-three"><div>Seharusnya terpakai<b id="tlSeharusnya">-</b></div><div>Aktual terpakai<b id="tlAktual">-</b></div><div id="tlSelisihBox">Selisih<b id="tlSelisih">-</b></div></div><p id="tlCalcNote" class="hint"></p><div class="grid"><label>Batas selisih (butir)<input id="tlBatas" type="number" min="0" step="1" inputmode="numeric"></label><div><label>&nbsp;</label><button type="button" id="tlBatasBtn">Simpan batas</button></div></div><h3>Resep telur per menu</h3><p class="hint">Jumlah telur per porsi, satu resep per menu (Normal dan Reguler sama). Isi sesuai resep dapur.</p><div id="tlResep"></div><datalist id="tlMenuNames"></datalist><button type="button" id="tlAddResep">Tambah menu</button></div></div></section><section id="editor" class="hide" aria-label="Edit barang"></section></div><p id="message" role="status" aria-live="polite"></p><small>Lokalin Cafe · Stok Bar & Kitchen</small></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>
 if(location.protocol==='file:')document.getElementById('preview-warning').style.display='block';const $=x=>document.getElementById(x),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),fmt=x=>Number(x||0).toLocaleString('id-ID',{maximumFractionDigits:3});let db,role,items=[],history=[],tab='stock',division='Bar',busy=false,stockQuery='',stockFilter='all';const message=x=>$('message').textContent=x||'';let config;try{config=JSON.parse(localStorage.getItem('lokalin-cloud')||'null')}catch{}if(config){$('url').value=config.url;$('key').value=config.key}
 async function connect(){try{let url=$('url').value.trim(),key=$('key').value.trim();if(!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url)||!key)throw Error('URL atau key tidak valid');if(!window.supabase)throw Error('Library Supabase tidak termuat');db=supabase.createClient(url,key);localStorage.setItem('lokalin-cloud',JSON.stringify({url,key}));$('setup').classList.add('hide');db.auth.onAuthStateChange(()=>setTimeout(check,0));await check()}catch(e){message(e.message)}}
-async function check(){if(!db)return;const {data:{user},error}=await db.auth.getUser();if(error||!user){role=null;$('payrollNav').classList.add('hide');$('login').classList.remove('hide');$('app').classList.add('hide');$('logout').classList.add('hide');$('who').textContent='Login diperlukan';return}const r=await db.from('lokalin_stock_roles').select('role').eq('user_id',user.id).maybeSingle();if(r.error){$('payrollNav').classList.add('hide');return message(r.error.message)}role=r.data?.role;$('payrollNav').classList.toggle('hide',role!=='owner');$('login').classList.add('hide');$('logout').classList.remove('hide');$('who').textContent=user.email+' · '+(role||'belum ada role');$('app').classList.toggle('hide',!role);if(!role)return message('Akun belum diberikan role stok');message('');await refresh()}
+async function check(){if(!db)return;const {data:{user},error}=await db.auth.getUser();if(error||!user){role=null;$('payrollNav').classList.add('hide');$('login').classList.remove('hide');$('app').classList.add('hide');$('logout').classList.add('hide');$('who').textContent='Login diperlukan';return}const r=await db.from('lokalin_stock_roles').select('role').eq('user_id',user.id).maybeSingle();if(r.error){$('payrollNav').classList.add('hide');return message(r.error.message)}role=r.data?.role;$('payrollNav').classList.toggle('hide',role!=='owner');$('login').classList.add('hide');$('logout').classList.remove('hide');$('who').textContent=user.email+' · '+(role||'belum ada role');$('app').classList.toggle('hide',!role);if(!role)return message('Akun belum diberikan role stok');message('');await refresh();if(tlWant){tlWant=false;telurOpen()}}
 $('connect').onclick=connect;$('loginForm').onsubmit=async e=>{e.preventDefault();const r=await db.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(r.error)message(r.error.message);else check()};$('logout').onclick=async()=>{await db.auth.signOut();check()};if(config)connect();
 async function refresh(){if(!role||busy)return;let [a,b]=await Promise.all([db.from('lokalin_stock_items').select('*').order('name'),db.from('lokalin_stock_transactions').select('*').order('created_at',{ascending:false}).limit(250)]);if(a.error||b.error)return message((a.error||b.error).message);items=a.data;history=b.data;if(stockFormInProgress()){renderSummary();renderStockList()}else render()}
 function filteredItems(){return items.filter(i=>String(i.division).toLowerCase()===division.toLowerCase())}
@@ -77,7 +79,7 @@ function renderSummary(){
  if(role==='owner')cards.push(['Nilai stok','Rp '+fmt(selected.reduce((sum,i)=>sum+Number(i.quantity||0)*Number(i.purchase_price||0),0)),'value-card']);
  $('cards').innerHTML=cards.map(([label,value,cls])=>'<div class="'+cls+'">'+esc(label)+'<b>'+esc(value)+'</b></div>').join('');
 }
-function render(){renderSummary();document.querySelectorAll('[data-division]').forEach(b=>{b.classList.toggle('selected',b.dataset.division===division);b.setAttribute('aria-pressed',String(b.dataset.division===division))});document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-pressed',String(b.dataset.tab===tab))});if(tab==='stock')stock();if(tab==='move')move();if(tab==='history')logs();if(tab==='report')report()}
+function render(){renderSummary();document.querySelectorAll('[data-division]').forEach(b=>{b.classList.toggle('selected',b.dataset.division===division);b.setAttribute('aria-pressed',String(b.dataset.division===division))});document.querySelectorAll('[data-tab]').forEach(b=>{b.classList.toggle('active',b.dataset.tab===tab);b.setAttribute('aria-pressed',String(b.dataset.tab===tab))});if(tab==='stock')stock();if(tab==='move')move();if(tab==='history')logs();if(tab==='report')report();telurShow()}
 function stock(){
  // Preserve active edit form even if another callback requests a render.
  if(document.getElementById('editStockForm'))return;
@@ -102,9 +104,9 @@ function renderStockList(){
  list.innerHTML=visible.map(i=>{
   const low=+i.quantity<=+i.minimum_stock;
   const status=+i.quantity===0?'Habis':low?'Menipis':'Aman';
-  return '<article class="stock-item '+(low?'low':'')+'"><div><h3>'+esc(i.name)+'</h3><p class="stock-meta">Minimum '+fmt(i.minimum_stock)+' '+esc(i.unit)+'</p></div><div class="stock-quantity"><strong>'+fmt(i.quantity)+'</strong><small>'+esc(i.unit)+'</small></div><div class="stock-bottom"><span class="stock-state">'+status+'</span>'+(['owner','staff'].includes(role)?'<button type="button" data-edit="'+esc(i.id)+'" aria-label="Edit '+esc(i.name)+'">Edit</button>':'')+'</div>'+(role==='owner'?'<div class="stock-value">Harga/satuan Rp '+Number(i.purchase_price||0).toLocaleString('id-ID',{maximumFractionDigits:4})+' · Nilai Rp '+Number(Number(i.quantity||0)*Number(i.purchase_price||0)).toLocaleString('id-ID',{maximumFractionDigits:2})+'</div>':'')+'</article>';
+  return '<article class="stock-item '+(low?'low':'')+'"><div><h3>'+esc(i.name)+'</h3><p class="stock-meta">Minimum '+fmt(i.minimum_stock)+' '+esc(i.unit)+'</p></div><div class="stock-quantity"><strong>'+fmt(i.quantity)+'</strong><small>'+esc(i.unit)+'</small></div><div class="stock-bottom"><span class="stock-state">'+status+'</span>'+(['owner','staff'].includes(role)?'<button type="button" data-edit="'+esc(i.id)+'" aria-label="Edit '+esc(i.name)+'">Edit</button>':'')+(['owner','staff'].includes(role)&&telurItem()===i?'<button type="button" data-telur>Kontrol Telur</button>':'')+'</div>'+(role==='owner'?'<div class="stock-value">Harga/satuan Rp '+Number(i.purchase_price||0).toLocaleString('id-ID',{maximumFractionDigits:4})+' · Nilai Rp '+Number(Number(i.quantity||0)*Number(i.purchase_price||0)).toLocaleString('id-ID',{maximumFractionDigits:2})+'</div>':'')+'</article>';
  }).join('')||'<div class="stock-empty">'+(selected.length?'Tidak ada barang yang cocok.':'Belum ada barang di divisi ini.')+'</div>';
- list.querySelectorAll('[data-edit]').forEach(button=>button.onclick=()=>openStockEditor(button.dataset.edit));
+ list.querySelectorAll('[data-edit]').forEach(button=>button.onclick=()=>openStockEditor(button.dataset.edit));list.querySelectorAll('[data-telur]').forEach(button=>button.onclick=telurOpen);
 }
 
 function attachPackCalculator(form){
@@ -147,5 +149,193 @@ document.addEventListener('change',e=>{const form=e.target.closest?.('#add,#edit
 // Sinkronisasi otomatis dimatikan untuk mencegah reset form edit.
 // Muat ulang data ketika membuka tab lain atau setelah menyimpan transaksi.
 
+// Kontrol Telur di stok Kitchen: stok awal, masuk, dan akhir diturunkan dari item Telur dan transaksinya. Tabel telur_* menyimpan resep, penjualan, rusak, dan snapshot harian.
+const TL_SQL='Tabel telur belum ada. Owner perlu menjalankan sql/telur.sql di Supabase SQL Editor.';
+let tl={resep:[],sales:{},batas:3,log:null,d:null,ok:false,hidden:true},tlWant=/telur/i.test(location.hash+location.search);
+const telurItem=()=>items.find(i=>String(i.division).toLowerCase()==='kitchen'&&String(i.name).trim().toLowerCase()==='telur');
+const witaToday=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Makassar',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+const tlNum=id=>{const v=$(id).value.trim();return v===''?null:Number(v)};
+const tlFmt=n=>Number.isInteger(n)?String(n):String(Math.round(n*100)/100);
+const tlNote=(x,bad)=>{$('tlStatus').textContent=x||'';$('tlStatus').style.color=bad?'#9d2420':''};
+const tlMissingSchema=e=>/42P01|PGRST205|schema cache|does not exist|Could not find/i.test((e?.code||'')+' '+(e?.message||'')+' '+(e?.details||''));
+const tlFail=(prefix,e)=>tlNote(tlMissingSchema(e)?TL_SQL:prefix+e.message,true);
+async function tlDerive(item,D){
+ const s=new Date(D+'T00:00:00+08:00'),e=new Date(s.getTime()+864e5);
+ const [p,n]=await Promise.all([
+  db.from('lokalin_stock_transactions').select('quantity_after').eq('item_id',item.id).lt('created_at',s.toISOString()).order('created_at',{ascending:false}).limit(1),
+  db.from('lokalin_stock_transactions').select('transaction_type,quantity,quantity_before,quantity_after,created_at').eq('item_id',item.id).gte('created_at',s.toISOString()).order('created_at',{ascending:true}).limit(1000)]);
+ if(p.error||n.error)throw p.error||n.error;
+ const all=n.data||[],day=all.filter(t=>new Date(t.created_at)<e);
+ const awal=p.data?.length?Number(p.data[0].quantity_after):all.length?Number(all[0].quantity_before):Number(item.quantity);
+ const masuk=day.filter(t=>t.transaction_type==='Masuk').reduce((a,t)=>a+Number(t.quantity),0);
+ const ops=day.filter(t=>t.transaction_type==='Opname');
+ const akhir=ops.length?Number(ops[ops.length-1].quantity):day.length?Number(day[day.length-1].quantity_after):awal;
+ return {awal,masuk,akhir,ada:day.length>0};
+}
+function tlRecompute(){
+ const d=tl.d;if(!d)return;
+ const seharusnya=tl.resep.reduce((a,r)=>a+Number(tl.sales[r.menu_name]||0)*Number(r.telur_per_porsi),0),rusak=tlNum('tlRusak')||0;
+ $('tlSeharusnya').textContent=tlFmt(seharusnya);
+ $('tlSelisihBox').classList.remove('bad');
+ if(!d.ada){$('tlAktual').textContent='-';$('tlSelisih').textContent='-';$('tlCalcNote').textContent='Belum ada transaksi telur pada tanggal ini, jadi pemakaian aktual belum bisa dihitung.';return}
+ const aktual=d.awal+d.masuk-d.akhir-rusak,selisih=aktual-seharusnya,bad=Math.abs(selisih)>tl.batas;
+ $('tlAktual').textContent=tlFmt(aktual);$('tlSelisih').textContent=(selisih>0?'+':'')+tlFmt(selisih);
+ $('tlSelisihBox').classList.toggle('bad',bad);
+ $('tlCalcNote').textContent=bad?'Selisih melewati batas '+tlFmt(tl.batas)+' butir. Periksa hitungan, porsi terjual, dan resep.':'Selisih masih dalam batas '+tlFmt(tl.batas)+' butir.';
+}
+function tlRenderSales(){
+ const root=$('tlSales');root.replaceChildren();
+ if(!tl.resep.length){const p=document.createElement('p');p.className='hint';p.textContent='Tambah resep telur dulu agar porsi terjual bisa diisi.';root.append(p);return}
+ for(const r of tl.resep){
+  if(!r.menu_name)continue;
+  const row=document.createElement('div');row.className='tl-sale';
+  const name=document.createElement('span');name.textContent=r.menu_name+' ('+tlFmt(Number(r.telur_per_porsi))+' telur)';
+  const q=document.createElement('input');q.type='number';q.min='0';q.step='1';q.inputMode='numeric';q.value=String(tl.sales[r.menu_name]??0);q.setAttribute('aria-label','Porsi terjual '+r.menu_name);
+  q.oninput=()=>{tl.sales[r.menu_name]=Number(q.value)||0;tlRecompute()};
+  row.append(name,q);root.append(row);
+ }
+}
+function tlRenderResep(){
+ const root=$('tlResep');root.replaceChildren();
+ for(const r of tl.resep)root.append(tlResepRow(r));
+ tlRecompute();
+}
+function tlResepRow(r){
+ const row=document.createElement('div');row.className='tl-row';
+ const name=document.createElement('input');name.type='text';name.setAttribute('list','tlMenuNames');name.placeholder='Nama menu';name.value=r.menu_name;name.setAttribute('aria-label','Nama menu');
+ const egg=document.createElement('input');egg.type='number';egg.min='0';egg.step='0.5';egg.inputMode='decimal';egg.placeholder='Telur';egg.value=r.telur_per_porsi??'';egg.setAttribute('aria-label','Telur per porsi');
+ const box=document.createElement('div');box.className='acts';
+ const save=document.createElement('button');save.type='button';save.textContent='Simpan';
+ const del=document.createElement('button');del.type='button';del.textContent='Hapus';del.style.background='#f6e9dc';del.style.color='#8c2722';
+ save.onclick=async()=>{
+  const n=name.value.trim(),e=Number(egg.value);
+  if(!n||egg.value.trim()===''||!Number.isFinite(e)||e<0)return tlNote('Isi nama menu dan jumlah telur 0 atau lebih.',true);
+  if(tl.resep.some(x=>x!==r&&x.menu_name.toLocaleLowerCase('id')===n.toLocaleLowerCase('id')))return tlNote('Resep untuk menu ini sudah ada.',true);
+  save.disabled=true;
+  if(r.menu_name&&r.menu_name!==n){const d=await db.from('telur_resep').delete().eq('menu_name',r.menu_name);if(d.error){save.disabled=false;return tlFail('Gagal mengganti nama: ',d.error)}}
+  const {error}=await db.from('telur_resep').upsert({menu_name:n,telur_per_porsi:e,updated_at:new Date().toISOString()},{onConflict:'menu_name'});
+  save.disabled=false;
+  if(error)return tlFail('Gagal menyimpan resep: ',error);
+  await tlInit('Resep disimpan.');
+ };
+ del.onclick=async()=>{
+  if(!r.menu_name){tl.resep=tl.resep.filter(x=>x!==r);tlRenderResep();tlRenderSales();return}
+  if(!confirm('Hapus resep '+r.menu_name+'?'))return;
+  del.disabled=true;
+  const {error}=await db.from('telur_resep').delete().eq('menu_name',r.menu_name);
+  del.disabled=false;
+  if(error)return tlFail('Gagal menghapus resep: ',error);
+  await tlInit('Resep dihapus.');
+ };
+ box.append(save,del);row.append(name,egg,box);
+ return row;
+}
+async function tlInit(msg){
+ const it=telurItem();if(!it)return;
+ tlNote(msg||'Memuat data…');
+ const [r,set,names]=await Promise.all([
+  db.from('telur_resep').select('menu_name,telur_per_porsi').order('menu_name',{ascending:true}),
+  db.from('telur_pengaturan').select('batas_selisih').eq('id',1).maybeSingle(),
+  db.from('menu_availability').select('name').order('name',{ascending:true})
+ ]);
+ const err=r.error||set.error;
+ tl.ok=!err;
+ $('tlTables').classList.toggle('hide',!tl.ok);
+ if(err)tlFail('Data telur belum dapat dibuka. ',err);
+ else{
+  tl.resep=r.data||[];tl.batas=set.data?Number(set.data.batas_selisih):3;$('tlBatas').value=tl.batas;
+  $('tlMenuNames').innerHTML=[...new Set((names.data||[]).map(x=>x.name))].map(n=>'<option value="'+esc(n)+'"></option>').join('');
+  tlNote(msg||'');
+ }
+ if(!$('tlTanggal').value)$('tlTanggal').value=witaToday();
+ await tlLoadDay(!!msg&&!err);
+}
+async function tlLoadDay(keepNote){
+ const it=telurItem(),D=$('tlTanggal').value;if(!it||!D)return;
+ try{
+  tl.d=await tlDerive(it,D);
+  if(tl.ok){
+   const [l,s]=await Promise.all([db.from('telur_log_harian').select('*').eq('tanggal',D).maybeSingle(),db.from('telur_penjualan_harian').select('menu_name,qty').eq('tanggal',D)]);
+   if(l.error||s.error)throw l.error||s.error;
+   tl.log=l.data;tl.sales={};for(const x of s.data||[])tl.sales[x.menu_name]=Number(x.qty);
+   $('tlRusak').value=tl.log?tl.log.rusak:'0';$('tlAlasan').value=tl.log?.alasan_rusak||'';
+  }
+ }catch(e){return tlFail('Gagal memuat catatan: ',e)}
+ $('tlLive').textContent=fmt(it.quantity)+' '+it.unit;
+ $('tlAwal').textContent=tlFmt(tl.d.awal);$('tlMasuk').textContent=tlFmt(tl.d.masuk);$('tlAkhir').textContent=tl.d.ada?tlFmt(tl.d.akhir):'Belum ada';
+ $('tlMasukIn').value='';$('tlAkhirIn').value='';
+ if(tl.ok){tlRenderSales();tlRenderResep()}
+}
+async function tlSnapshot(D,rusak,alasan){
+ const d=await tlDerive(telurItem(),D);
+ const {error}=await db.from('telur_log_harian').upsert({tanggal:D,stok_awal:d.awal,telur_masuk:d.masuk,stok_akhir:d.ada?d.akhir:null,rusak,alasan_rusak:rusak>0?alasan:null,updated_at:new Date().toISOString()},{onConflict:'tanggal'});
+ if(error)throw error;
+}
+// Satu pintu untuk aksi tulis: cek tanggal, jalankan, muat ulang stok, lalu muat ulang panel.
+async function tlAct(btn,fn,ok){
+ const D=$('tlTanggal').value;
+ if(!tl.ok)return tlNote(TL_SQL,true);
+ if(!D)return tlNote('Pilih tanggal.',true);
+ btn.disabled=true;
+ try{
+  const done=await fn(D);
+  if(done===false)return;
+  await refresh();await tlLoadDay(true);tlNote(ok);
+ }catch(e){tlFail('Gagal: ',e)}finally{btn.disabled=false}
+}
+const tlRecord=async(it,type,q,notes)=>{const r=await db.rpc('lokalin_stock_record',{p_item_id:it.id,p_type:type,p_quantity:q,p_notes:notes});if(r.error)throw r.error;await syncMenusQuietly()};
+const tlToday=D=>D===witaToday()||(tlNote('Pencatatan stok hanya bisa untuk hari ini.',true),false);
+$('tlMasukBtn').onclick=e=>tlAct(e.target,async D=>{
+ const q=tlNum('tlMasukIn');
+ if(q===null||!Number.isFinite(q)||q<=0)return tlNote('Isi jumlah telur masuk lebih dari 0.',true),false;
+ if(!tlToday(D))return false;
+ await tlRecord(telurItem(),'Masuk',q,'Telur masuk (Kontrol Telur)');
+ await refresh();await tlSnapshot(D,Number(tl.log?.rusak||0),tl.log?.alasan_rusak||'');
+},'Telur masuk dicatat di stok.');
+$('tlAkhirBtn').onclick=e=>tlAct(e.target,async D=>{
+ const q=tlNum('tlAkhirIn');
+ if(q===null||!Number.isFinite(q)||q<0)return tlNote('Isi stok akhir 0 atau lebih.',true),false;
+ if(!tlToday(D))return false;
+ await tlRecord(telurItem(),'Opname',q,'Stok akhir hitung fisik (Kontrol Telur)');
+ await refresh();await tlSnapshot(D,Number(tl.log?.rusak||0),tl.log?.alasan_rusak||'');
+},'Stok akhir dicatat sebagai opname.');
+$('tlSave').onclick=e=>tlAct(e.target,async D=>{
+ const rusak=tlNum('tlRusak')??0,alasan=$('tlAlasan').value.trim(),prev=Number(tl.log?.rusak||0),delta=rusak-prev;
+ if(!Number.isFinite(rusak)||rusak<0)return tlNote('Rusak harus 0 atau lebih.',true),false;
+ if(rusak>0&&!alasan)return tlNote('Isi alasan rusak.',true),false;
+ if(delta<0)return tlNote('Rusak tidak bisa dikurangi di sini. Koreksi lewat transaksi Masuk atau Opname.',true),false;
+ if(delta>0){
+  if(!tlToday(D))return false;
+  await tlRecord(telurItem(),'Keluar',delta,'Rusak/dibuang: '+alasan);
+  await refresh();
+ }
+ await tlSnapshot(D,rusak,alasan);
+ const now=new Date().toISOString(),rows=tl.resep.filter(r=>r.menu_name).map(r=>({tanggal:D,menu_name:r.menu_name,qty:Number(tl.sales[r.menu_name]||0),updated_at:now}));
+ if(rows.length){const b=await db.from('telur_penjualan_harian').upsert(rows,{onConflict:'tanggal,menu_name'});if(b.error)throw b.error}
+},'Catatan harian disimpan.');
+$('tlBatasBtn').onclick=async()=>{
+ const b=tlNum('tlBatas');
+ if(b===null||!Number.isFinite(b)||b<0)return tlNote('Batas harus 0 atau lebih.',true);
+ const {error}=await db.from('telur_pengaturan').upsert({id:1,batas_selisih:b,updated_at:new Date().toISOString()},{onConflict:'id'});
+ if(error)return tlFail('Gagal menyimpan batas: ',error);
+ tl.batas=b;tlNote('Batas disimpan.');tlRecompute();
+};
+$('tlAddResep').onclick=()=>{tl.resep.push({menu_name:'',telur_per_porsi:null});tlRenderResep()};
+$('tlTanggal').onchange=()=>{tlNote('');tlLoadDay()};
+$('tlRusak').addEventListener('input',tlRecompute);
+function telurShow(){
+ const p=$('telurPanel');if(!p)return;
+ const on=division==='Kitchen'&&tab==='stock'&&['owner','staff'].includes(role);
+ p.classList.toggle('hide',!on);
+ if(!on){tl.hidden=true;return}
+ const it=telurItem();
+ $('tlMissing').classList.toggle('hide',!!it);$('tlBody').classList.toggle('hide',!it);
+ if(it&&tl.hidden){tl.hidden=false;tlInit()}
+}
+function telurOpen(){
+ if(document.getElementById('editStockForm'))return message('Simpan atau batalkan Edit Barang dulu.');
+ division='Kitchen';tab='stock';render();
+ $('telurPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
 </script></body></html>
 

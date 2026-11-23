@@ -65,7 +65,7 @@ function isReady(x,key){
   return !!x[readyField(x,key)];
 }
 const anyReady=x=>portionKeys(x).some(k=>isReady(x,k));
-const totalQty=x=>portionKeys(x).reduce((a,k)=>a+Number(x[qtyField(x,k)]||0),0);
+const totalQty=x=>readySplit&&hasReguler(x)?Number(x.stock_qty||0)+Number(x.stock_qty_reguler||0):Number(x.stock_qty||0);
 function portionRow(item,key,linked,withActions){
   const reg=key==='reguler';
   const value=reg?item.harga_reguler:item.price;
@@ -298,7 +298,7 @@ async function load(){
     else if(!syncReady||!priceSplit)note('Harga yang sudah ada tetap harga Normal. Harga Reguler dan sinkron stok aktif setelah sql/menu-stock-sync.sql dijalankan.');
     else if(!readySplit)note('Porsi Normal dan Reguler masih berbagi satu jumlah dan status. Jalankan sql/menu-porsi.sql di Supabase untuk memisahkannya.');
     else if(data.some(x=>!isDrink(x)&&x.price==null))note('Ada menu makanan tanpa harga Normal. Isi di kartu menu, pada kolom Normal.');
-    else if(data.some(x=>!isDrink(x)&&x.price!=null&&x.price===x.harga_reguler))note('Ada menu makanan yang harga Normal-nya sama dengan Reguler. Harga Normal itu belum diketahui; isi harga Normal yang sebenarnya.');
+    else if(data.some(x=>!isDrink(x)&&x.price!=null&&x.harga_reguler!=null&&Number(x.price)===Number(x.harga_reguler)))note('Ada menu makanan yang harga Normal-nya sama dengan Reguler. Harga Normal itu belum diketahui; isi harga Normal yang sebenarnya.');
     else hideNote();
   }
   $('controls').classList.remove('hidden');

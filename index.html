@@ -2628,7 +2628,8 @@ $('memberPhone').onsubmit=async e=>{
   for(const el of controls)el.disabled=true;
   $('memberMessage').textContent='Memproses…';
   try{
-    const raw=$('cardPhone').value;if(raw.trim()===''&&currentCard.phone&&!confirm('Hapus No. HP member ini?'))return;\n    const data=await saveMemberPhone(currentCard.code,raw);
+    const raw=$('cardPhone').value;if(raw.trim()===''&&currentCard.phone&&!confirm('Hapus No. HP member ini?'))return;
+    const data=await saveMemberPhone(currentCard.code,raw);
     $('memberMessage').textContent=data.phone?'No. HP disimpan.':'No. HP dihapus.';
   }catch(err){$('memberMessage').textContent=err.message||'Koneksi terputus.';}
   finally{

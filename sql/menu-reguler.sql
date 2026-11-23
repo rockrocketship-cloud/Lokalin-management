@@ -30,7 +30,7 @@ $$;
 insert into public.menu_availability (
   category, name, price, harga_reguler, description, is_ready, stock_qty, sort_order
 )
-select v.category, v.name, null, v.harga_reguler, v.description, true, 0,
+select v.category, v.name, v.harga_reguler, v.harga_reguler, v.description, true, 0,
        (select coalesce(max(m.sort_order), 0) from public.menu_availability m) + v.n
 from (values
   (1, 'Rice Bowl', 'Paru Rica', 35000,

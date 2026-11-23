@@ -75,9 +75,11 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #ee
 </details>
 <details id="memberRegistration"><summary>Daftarkan member baru</summary>
 <form id="memberCreate"><label for="newCode">Kode member baru</label><input id="newCode" required pattern="[A-Za-z0-9\-]{3,24}" maxlength="24" placeholder="Contoh LKL-002">
-<label for="newName">Nama member</label><input id="newName" maxlength="60" required><button>Daftarkan</button></form></details>
+<label for="newName">Nama member</label><input id="newName" maxlength="60" required>
+<label for="newPhone">No. HP</label><input id="newPhone" type="tel" inputmode="tel" maxlength="20" required placeholder="08xxxxxxxxxx"><button>Daftarkan</button></form></details>
 <section id="memberResult" hidden><article id="stampCard"><img id="stampLogo" alt="Lokalin Cafe">
 <strong id="cardName"></strong><small id="cardCode"></small><div id="stampDots" aria-hidden="true"></div><b id="stampBalance"></b></article>
+<form id="memberPhone"><label for="cardPhone">No. HP</label><input id="cardPhone" type="tel" inputmode="tel" maxlength="20" placeholder="08xxxxxxxxxx"><button>Simpan No. HP</button></form>
 <button id="qrShow" type="button">Tampilkan QR pelanggan</button>
 <div id="qrPanel" hidden><div id="qrImage"></div><p id="qrNote" role="status"></p><a id="qrLink" hidden>Buka kartu pelanggan</a></div>
 <form id="memberStamp"><label for="receiptNo">Nomor struk unik</label><input id="receiptNo" required maxlength="80" placeholder="Nomor lengkap pada struk"><button>Tambah 1 stamp</button></form>
@@ -2502,12 +2504,14 @@ $('qrShow').onclick=async()=>{
 function showCard(card){
   qrGeneration++;$('qrPanel').hidden=true;$('qrImage').replaceChildren();
   $('qrLink').removeAttribute('href');
+  if(card&&card.phone===undefined&&currentCard&&currentCard.code===card.code)card.phone=currentCard.phone;
   currentCard=card;
   $('memberResult').hidden=!card;
   $('receiptNo').value='';
   if(!card)return;
   $('cardName').textContent=card.member_name;
   $('cardCode').textContent=card.code;
+  $('cardPhone').value=card.phone||'';
   $('stampBalance').textContent=card.balance+' stamp · '+Math.floor(card.balance/7)+' minuman bisa ditukar';
   $('stampDots').replaceChildren();
   for(let i=0;i<8;i++){
@@ -2572,6 +2576,15 @@ async function applyMember(action){
     });
     if(error)throw error;
     showCard(data);$('memberCode').value=data.code;
+    if(action==='create'){
+      // Kartu baru tetap tampil jika nomor HP gagal tersimpan; staf bisa coba lagi dari kolom No. HP.
+      const phone=$('newPhone').value;
+      $('cardPhone').value=phone;
+      try{await saveMemberPhone(data.code,phone)}
+      catch(phoneErr){$('memberRegistration').open=false;$('memberMessage').textContent='Member terdaftar, tetapi No. HP belum tersimpan: '+(phoneErr.message||'Koneksi terputus.');return;}
+    }else{
+      try{await loadMemberPhone(data.code)}catch(_){ /* stamp_card tidak mengembalikan phone; biarkan kosong jika RPC belum ada */ }
+    }
     $('memberRegistration').open=false;
     $('memberMessage').textContent={get:'',create:'Member berhasil didaftarkan.',stamp:'1 stamp ditambahkan.',redeem:'7 stamp ditukar dengan 1 minuman gratis.'}[action];
   }catch(err){
@@ -2588,6 +2601,43 @@ for(const [id,action] of [['memberFind','search'],['memberCreate','create'],['me
   $(id).onsubmit=e=>{e.preventDefault();applyMember(action)};
 }
 $('memberRedeem').onclick=()=>applyMember('redeem');
+// Aturan sama dengan lokalin_normalize_phone di SQL; RPC tetap penentu akhir.
+function normalizePhone(v){
+  let d=String(v||'').replace(/\D/g,'');
+  if(d[0]==='0')d='62'+d.slice(1);else if(d[0]==='8')d='62'+d;
+  return /^628\d{7,12}$/.test(d)?d:null;
+}
+async function loadMemberPhone(code){
+  const {data,error}=await db.rpc('lokalin_set_member_phone',{p_code:code,p_phone:null});
+  if(error)throw error.code==='PGRST202'?new Error('Fitur belum aktif. Jalankan member-phone.sql di Supabase.'):error;
+  if(currentCard&&currentCard.code===data.code){currentCard.phone=data.phone;$('cardPhone').value=data.phone||'';}
+  return data;
+}
+async function saveMemberPhone(code,raw){
+  if(raw.trim()!==''&&!normalizePhone(raw))throw new Error('Nomor HP tidak valid.');
+  const {data,error}=await db.rpc('lokalin_set_member_phone',{p_code:code,p_phone:raw});
+  if(error)throw error.code==='PGRST202'?new Error('Fitur belum aktif. Jalankan member-phone.sql di Supabase.'):error;
+  if(currentCard&&currentCard.code===data.code){currentCard.phone=data.phone;$('cardPhone').value=data.phone||'';}
+  return data;
+}
+$('memberPhone').onsubmit=async e=>{
+  e.preventDefault();
+  if(memberBusy||!currentCard)return;
+  memberBusy=true;
+  const controls=memberBox.querySelectorAll('button,input');
+  for(const el of controls)el.disabled=true;
+  $('memberMessage').textContent='Memproses…';
+  try{
+    const raw=$('cardPhone').value;if(raw.trim()===''&&currentCard.phone&&!confirm('Hapus No. HP member ini?'))return;\n    const data=await saveMemberPhone(currentCard.code,raw);
+    $('memberMessage').textContent=data.phone?'No. HP disimpan.':'No. HP dihapus.';
+  }catch(err){$('memberMessage').textContent=err.message||'Koneksi terputus.';}
+  finally{
+    memberBusy=false;
+    for(const el of controls)el.disabled=false;
+    $('memberRedeem').disabled=!currentCard||currentCard.balance<7;
+    syncDirectoryControls();
+  }
+};
 memberBox.addEventListener('cancel',e=>{if(memberBusy)e.preventDefault()});
 
 let roomChannel=null,roomTimer=null,roomRequestBusy=false;

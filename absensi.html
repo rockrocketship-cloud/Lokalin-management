@@ -180,6 +180,8 @@ import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
 const db=createClient('https://kwhtqqrzeifmntdtugvg.supabase.co','sb_publishable_JGQ9jpXgEb3IMl0YjY3Txg_cQKy02Fs',{auth:{storageKey:'sb-kwhtqqrzeifmntdtugvg-auth-token',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);let role=null,employees=[],records=[],busy=false,shiftRows=[],shiftStatusOk=false;
 const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const soreLabel=()=>new Date(dateWita()+'T00:00:00Z').getUTCDay()===6?'Sore · 17.00–01.00':'Sore · 16.00–00.00';
+function refreshSoreLabel(){const t=soreLabel();for(const id of ['shift','dwShift']){const o=document.querySelector('#'+id+' option[value="Sore"]');if(o&&o.textContent!==t)o.textContent=t}}
 const dateWita=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Makassar',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 function notify(s){$('toast').textContent=s;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',4000)}
 function fail(e){notify(e?.message||String(e))}
@@ -384,6 +386,7 @@ $('staffYesterday').onclick=()=>{$('staffHistoryDate').value=yesterdayWita();loa
 $('staffHistoryRefresh').onclick=loadStaffHistory;
 $('staffHistoryDate').onchange=loadStaffHistory;
 
+refreshSoreLabel();setInterval(refreshSoreLabel,60000);document.addEventListener('visibilitychange',refreshSoreLabel);
 db.auth.onAuthStateChange((event)=>{if(event==='SIGNED_OUT')location.replace('./index.html');else if(event==='SIGNED_IN')setTimeout(()=>initialize(),0)});initialize();
 </script></body></html>
 

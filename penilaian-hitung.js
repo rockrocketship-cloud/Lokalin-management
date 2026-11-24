@@ -1,6 +1,8 @@
 // Logika skor & potongan Penilaian Kinerja (murni, tanpa DOM/Supabase) — dipakai penilaian.html dan payroll.html
 export const DEFAULT_CFG = {potongan_telat_ringan: 5000, potongan_telat_berat: 10000, potongan_tidak_update_stok: 5000, potongan_lupa_pulang: 5000, hangus_di_bawah: 60};
 export const SHIFT_START = {pagi: 600, sore: 960};
+// Sore mulai 17.00 pada hari Sabtu (tanggal kalender baris absensi, YYYY-MM-DD), selain itu 16.00.
+export const soreStart = tanggal => new Date(String(tanggal) + 'T00:00:00Z').getUTCDay() === 6 ? 1020 : 960;
 const BULAN_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 export const clamp = (v, max) => Math.max(0, Math.min(max, Number(v) || 0));
@@ -35,7 +37,7 @@ export function kehadiran(e, att, monthly, tel){
     seen.add(r.tanggal); hadir++;
     // Lupa absen pulang: jam_pulang kosong pada hari yang sudah lewat (hari ini masih berjalan).
     if (!String(r.jam_pulang || '').trim() && r.tanggal < today) lupa_pulang++;
-    const start = SHIFT_START[String(r.shift || '').trim().toLowerCase()], mi = minutes(r.jam_masuk);
+    const sh = String(r.shift || '').trim().toLowerCase(), start = sh === 'sore' ? soreStart(r.tanggal) : SHIFT_START[sh], mi = minutes(r.jam_masuk);
     if (start == null || mi == null) continue;
     const late = mi - start;
     if (late >= 1 && late <= 15) ringan++; else if (late > 15) berat++;

@@ -5,11 +5,11 @@ const BULAN_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 
 export const clamp = (v, max) => Math.max(0, Math.min(max, Number(v) || 0));
 
-// Bulan kalender YYYY-MM: tanggal 1 sampai hari terakhir.
+// Periode payroll untuk bulan akhir YYYY-MM: tanggal 26 bulan sebelumnya sampai tanggal 25 bulan itu.
 export function monthRange(m){
   if (!BULAN_RE.test(m)) throw Error('Pilih bulan penilaian');
   const [y, mo] = m.split('-').map(Number);
-  return {m, start: m + '-01', end: m + '-' + String(new Date(Date.UTC(y, mo, 0)).getUTCDate()).padStart(2, '0')};
+  return {m, start: new Date(Date.UTC(y, mo - 2, 26)).toISOString().slice(0, 10), end: m + '-25'};
 }
 
 export function minutes(t){

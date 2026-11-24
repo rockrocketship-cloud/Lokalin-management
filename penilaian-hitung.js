@@ -1,5 +1,7 @@
 // Logika skor & potongan Penilaian Kinerja (murni, tanpa DOM/Supabase) — dipakai penilaian.html dan payroll.html
 export const DEFAULT_CFG = {potongan_telat_ringan: 5000, potongan_telat_berat: 10000, potongan_tidak_update_stok: 5000, potongan_lupa_pulang: 5000, hangus_di_bawah: 60};
+// Standar sementara Kualitas (dari 25) bila belum ada input mingguan di periode.
+export const KUALITAS_SEMENTARA = 20;
 export const SHIFT_START = {pagi: 600, sore: 960};
 const BULAN_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -59,12 +61,12 @@ export function tier(total, viol){
 
 // d = {att, weekly, monthly, cfg, tel}
 export function hitung(e, {att, weekly, monthly, cfg, tel}){
-  const k = kehadiran(e, att, monthly, tel), q = kualitas(e, weekly), m = monthly[e.id] || {};
+  const k = kehadiran(e, att, monthly, tel), q0 = kualitas(e, weekly), qSementara = q0 == null, q = qSementara ? KUALITAS_SEMENTARA : q0, m = monthly[e.id] || {};
   const pel = clamp(m.pelayanan ?? 20, 20), sik = m.sikap == null ? null : clamp(m.sikap, 15), ini = m.inisiatif == null ? null : clamp(m.inisiatif, 10), viol = !!m.ada_pelanggaran;
   const stok = Math.max(0, Math.floor(Number(m.tidak_update_stok) || 0));
   // Tidak update stok saat shift dan lupa absen pulang: -3 poin per kali, total tidak turun di bawah 0.
-  const total = Math.max(0, Math.round((k.poin + (q || 0) + pel + (sik || 0) + (ini || 0) - stok * 3 - k.lupa_pulang * 3) * 10) / 10);
+  const total = Math.max(0, Math.round((k.poin + q + pel + (sik || 0) + (ini || 0) - stok * 3 - k.lupa_pulang * 3) * 10) / 10);
   const t = tier(total, viol), hangus = total < cfg.hangus_di_bawah || (total >= 75 && total < 90 && viol);
   const potongan = Math.max(0, k.ringan * cfg.potongan_telat_ringan + k.berat * cfg.potongan_telat_berat + stok * (Number(cfg.potongan_tidak_update_stok) || 0) + k.lupa_pulang * (Number(cfg.potongan_lupa_pulang) || 0));
-  return {k, q, pel, sik, ini, viol, stok, total, t, hangus, potongan};
+  return {k, q, qSementara, pel, sik, ini, viol, stok, total, t, hangus, potongan};
 }

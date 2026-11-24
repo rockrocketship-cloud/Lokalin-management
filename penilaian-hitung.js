@@ -18,7 +18,13 @@ export function minutes(t){
 }
 
 // e = {id, name}; att = baris absensi_harian; monthly = {emp_id: baris penilaian_bulanan}
-export function kehadiran(e, att, monthly){
+// tel = {emp_id: {hadir, ringan, berat}} hasil RPC lokalin_penilaian_telat; bila ada, dipakai menggantikan att.
+export function kehadiran(e, att, monthly, tel){
+  if (tel){
+    const t = tel[e.id] || {}, n = v => Math.max(0, Math.floor(Number(v) || 0));
+    const ringan = n(t.ringan), berat = n(t.berat);
+    return {hadir: n(t.hadir), ringan, berat, poin: Math.max(0, 30 - ringan * 2 - berat * 5)};
+  }
   const rows = att.filter(r => r.jam_masuk && (r.emp_id ? String(r.emp_id) === e.id : String(r.nama || '').trim().toLowerCase() === e.name.trim().toLowerCase()));
   rows.sort((a, b) => a.tanggal.localeCompare(b.tanggal) || String(a.jam_masuk).localeCompare(String(b.jam_masuk)));
   const seen = new Set();
@@ -48,9 +54,9 @@ export function tier(total, viol){
   return {label: 'Jalur SP', bonus: 0};
 }
 
-// d = {att, weekly, monthly, cfg}
-export function hitung(e, {att, weekly, monthly, cfg}){
-  const k = kehadiran(e, att, monthly), q = kualitas(e, weekly), m = monthly[e.id] || {};
+// d = {att, weekly, monthly, cfg, tel}
+export function hitung(e, {att, weekly, monthly, cfg, tel}){
+  const k = kehadiran(e, att, monthly, tel), q = kualitas(e, weekly), m = monthly[e.id] || {};
   const pel = clamp(m.pelayanan ?? 20, 20), sik = m.sikap == null ? null : clamp(m.sikap, 15), ini = m.inisiatif == null ? null : clamp(m.inisiatif, 10), viol = !!m.ada_pelanggaran;
   const stok = Math.max(0, Math.floor(Number(m.tidak_update_stok) || 0));
   // Tidak update stok saat shift: -3 poin per kali, total tidak turun di bawah 0.

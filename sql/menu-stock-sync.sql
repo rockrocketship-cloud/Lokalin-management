@@ -8,7 +8,7 @@
 -- 4. availability_mode = 'manual' menahan status is_ready yang dipilih staf. Mode 'auto' mengikuti stok.
 -- 5. Menu tanpa hubungan bahan tidak diubah.
 -- 6. qty_per_serving opsional: jika diisi, menu habis saat stok bahan kurang dari angka itu.
---    NULL = habis hanya jika stok <= 0. Angka ini tidak mengurangi stok saat menu terjual.
+--    NULL = habis hanya jika stok <= 0. Angka ini dipakai untuk memotong stok saat menu terjual setelah sql/menu-stock-deduct.sql dijalankan.
 --
 -- Anon tetap hanya bisa membaca menu_availability (kebijakan SELECT yang sudah ada).
 -- Tulisan hanya untuk pengguna login yang punya peran owner/staff di app_roles atau lokalin_stock_roles.
@@ -103,7 +103,7 @@ create table if not exists public.menu_stock_links (
   menu_id uuid not null references public.menu_availability (id) on delete cascade,
   stock_item_id uuid not null references public.lokalin_stock_items (id) on delete cascade,
   -- Perkiraan kebutuhan satu porsi, dalam satuan barang stok. NULL = abaikan jumlah,
-  -- menu dianggap habis hanya ketika stok bahan <= 0. Tidak mengurangi stok saat terjual.
+  -- menu dianggap habis hanya ketika stok bahan <= 0. Jika diisi, sql/menu-stock-deduct.sql memotong stok sebesar angka ini x jumlah terjual.
   qty_per_serving numeric,
   created_at timestamptz not null default now(),
   unique (menu_id, stock_item_id)
@@ -157,17 +157,15 @@ to authenticated
 using (public.lokalin_can_manage_menu_stock())
 with check (public.lokalin_can_manage_menu_stock());
 
-create or replace function public.lokalin_apply_menu_stock_sync(p_menu_id uuid default null)
+-- Helper privat: menulis sinkron tanpa cek peran. Hanya dipanggil trigger tepercaya dan RPC di bawah.
+-- Tidak ada grant ke public, anon, atau authenticated. sql/menu-stock-deduct.sql juga memasang ulang helper ini.
+create or replace function public.lokalin_menu_stock_sync_apply(p_menu_id uuid default null)
 returns void
 language plpgsql
 security definer
-set search_path = public
+set search_path = pg_catalog, pg_temp
 as $$
 begin
-  if auth.uid() is not null and not public.lokalin_can_manage_menu_stock() then
-    raise exception 'Tidak punya akses untuk menyinkronkan menu dan stok';
-  end if;
-
   update public.menu_availability m
   set
     sync_level = case
@@ -211,6 +209,24 @@ begin
 end;
 $$;
 
+revoke all on function public.lokalin_menu_stock_sync_apply(uuid) from public, anon, authenticated;
+
+-- RPC yang bisa dipanggil klien: tetap mewajibkan peran owner/staff, lalu memakai helper privat.
+create or replace function public.lokalin_apply_menu_stock_sync(p_menu_id uuid default null)
+returns void
+language plpgsql
+security definer
+set search_path = pg_catalog, pg_temp
+as $$
+begin
+  if auth.uid() is not null and not public.lokalin_can_manage_menu_stock() then
+    raise exception 'Tidak punya akses untuk menyinkronkan menu dan stok';
+  end if;
+
+  perform public.lokalin_menu_stock_sync_apply(p_menu_id);
+end;
+$$;
+
 revoke all on function public.lokalin_apply_menu_stock_sync(uuid) from public, anon;
 grant execute on function public.lokalin_apply_menu_stock_sync(uuid) to authenticated;
 
@@ -218,7 +234,7 @@ create or replace function public.lokalin_menu_stock_sync_trigger()
 returns trigger
 language plpgsql
 security definer
-set search_path = public
+set search_path = pg_catalog, pg_temp
 as $$
 declare
   target uuid;
@@ -230,7 +246,8 @@ begin
   else
     target := null;
   end if;
-  perform public.lokalin_apply_menu_stock_sync(target);
+  -- Helper privat tanpa cek peran, supaya update stok oleh kasir (kiosk) lewat pos_checkout tidak ditolak.
+  perform public.lokalin_menu_stock_sync_apply(target);
   return coalesce(new, old);
 end;
 $$;

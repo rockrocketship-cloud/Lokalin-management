@@ -1,5 +1,5 @@
 // Logika skor & potongan Penilaian Kinerja (murni, tanpa DOM/Supabase) — dipakai penilaian.html dan payroll.html
-export const DEFAULT_CFG = {potongan_telat_ringan: 5000, potongan_telat_berat: 10000, potongan_alpa: 50000, potongan_tidak_update_stok: 5000, hangus_di_bawah: 60};
+export const DEFAULT_CFG = {potongan_telat_ringan: 5000, potongan_telat_berat: 10000, potongan_tidak_update_stok: 5000, hangus_di_bawah: 60};
 export const SHIFT_START = {pagi: 600, sore: 960};
 const BULAN_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -31,8 +31,7 @@ export function kehadiran(e, att, monthly){
     const late = mi - start;
     if (late >= 1 && late <= 15) ringan++; else if (late > 15) berat++;
   }
-  const alpa = Math.max(0, Math.floor(Number(monthly[e.id]?.alpa_count) || 0));
-  return {hadir, ringan, berat, alpa, poin: Math.max(0, 30 - ringan * 2 - berat * 5 - alpa * 10)};
+  return {hadir, ringan, berat, poin: Math.max(0, 30 - ringan * 2 - berat * 5)};
 }
 
 export function kualitas(e, weekly){
@@ -57,6 +56,6 @@ export function hitung(e, {att, weekly, monthly, cfg}){
   // Tidak update stok saat shift: -3 poin per kali, total tidak turun di bawah 0.
   const total = Math.max(0, Math.round((k.poin + (q || 0) + pel + (sik || 0) + (ini || 0) - stok * 3) * 10) / 10);
   const t = tier(total, viol), hangus = total < cfg.hangus_di_bawah || (total >= 75 && total < 90 && viol);
-  const potongan = Math.max(0, k.ringan * cfg.potongan_telat_ringan + k.berat * cfg.potongan_telat_berat + k.alpa * cfg.potongan_alpa + stok * (Number(cfg.potongan_tidak_update_stok) || 0));
+  const potongan = Math.max(0, k.ringan * cfg.potongan_telat_ringan + k.berat * cfg.potongan_telat_berat + stok * (Number(cfg.potongan_tidak_update_stok) || 0));
   return {k, q, pel, sik, ini, viol, stok, total, t, hangus, potongan};
 }

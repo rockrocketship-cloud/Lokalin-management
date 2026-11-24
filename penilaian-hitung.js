@@ -1,5 +1,5 @@
 // Logika skor & potongan Penilaian Kinerja (murni, tanpa DOM/Supabase) — dipakai penilaian.html dan payroll.html
-export const DEFAULT_CFG = {potongan_telat_ringan: 5000, potongan_telat_berat: 10000, potongan_tidak_update_stok: 5000, hangus_di_bawah: 60};
+export const DEFAULT_CFG = {potongan_telat_ringan: 5000, potongan_telat_berat: 10000, potongan_tidak_update_stok: 5000, potongan_lupa_pulang: 5000, hangus_di_bawah: 60};
 export const SHIFT_START = {pagi: 600, sore: 960};
 const BULAN_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -18,26 +18,29 @@ export function minutes(t){
 }
 
 // e = {id, name}; att = baris absensi_harian; monthly = {emp_id: baris penilaian_bulanan}
-// tel = {emp_id: {hadir, ringan, berat}} hasil RPC lokalin_penilaian_telat; bila ada, dipakai menggantikan att.
+// tel = {emp_id: {hadir, ringan, berat, lupa_pulang}} hasil RPC lokalin_penilaian_telat; bila ada, dipakai menggantikan att.
 export function kehadiran(e, att, monthly, tel){
   if (tel){
     const t = tel[e.id] || {}, n = v => Math.max(0, Math.floor(Number(v) || 0));
     const ringan = n(t.ringan), berat = n(t.berat);
-    return {hadir: n(t.hadir), ringan, berat, poin: Math.max(0, 30 - ringan * 2 - berat * 5)};
+    return {hadir: n(t.hadir), ringan, berat, lupa_pulang: n(t.lupa_pulang), poin: Math.max(0, 30 - ringan * 2 - berat * 5)};
   }
   const rows = att.filter(r => r.jam_masuk && (r.emp_id ? String(r.emp_id) === e.id : String(r.nama || '').trim().toLowerCase() === e.name.trim().toLowerCase()));
   rows.sort((a, b) => a.tanggal.localeCompare(b.tanggal) || String(a.jam_masuk).localeCompare(String(b.jam_masuk)));
   const seen = new Set();
-  let ringan = 0, berat = 0, hadir = 0;
+  const today = new Intl.DateTimeFormat('sv-SE', {timeZone: 'Asia/Makassar'}).format(new Date());
+  let ringan = 0, berat = 0, hadir = 0, lupa_pulang = 0;
   for (const r of rows){
     if (seen.has(r.tanggal)) continue;
     seen.add(r.tanggal); hadir++;
+    // Lupa absen pulang: jam_pulang kosong pada hari yang sudah lewat (hari ini masih berjalan).
+    if (!String(r.jam_pulang || '').trim() && r.tanggal < today) lupa_pulang++;
     const start = SHIFT_START[String(r.shift || '').trim().toLowerCase()], mi = minutes(r.jam_masuk);
     if (start == null || mi == null) continue;
     const late = mi - start;
     if (late >= 1 && late <= 15) ringan++; else if (late > 15) berat++;
   }
-  return {hadir, ringan, berat, poin: Math.max(0, 30 - ringan * 2 - berat * 5)};
+  return {hadir, ringan, berat, lupa_pulang, poin: Math.max(0, 30 - ringan * 2 - berat * 5)};
 }
 
 export function kualitas(e, weekly){
@@ -59,9 +62,9 @@ export function hitung(e, {att, weekly, monthly, cfg, tel}){
   const k = kehadiran(e, att, monthly, tel), q = kualitas(e, weekly), m = monthly[e.id] || {};
   const pel = clamp(m.pelayanan ?? 20, 20), sik = m.sikap == null ? null : clamp(m.sikap, 15), ini = m.inisiatif == null ? null : clamp(m.inisiatif, 10), viol = !!m.ada_pelanggaran;
   const stok = Math.max(0, Math.floor(Number(m.tidak_update_stok) || 0));
-  // Tidak update stok saat shift: -3 poin per kali, total tidak turun di bawah 0.
-  const total = Math.max(0, Math.round((k.poin + (q || 0) + pel + (sik || 0) + (ini || 0) - stok * 3) * 10) / 10);
+  // Tidak update stok saat shift dan lupa absen pulang: -3 poin per kali, total tidak turun di bawah 0.
+  const total = Math.max(0, Math.round((k.poin + (q || 0) + pel + (sik || 0) + (ini || 0) - stok * 3 - k.lupa_pulang * 3) * 10) / 10);
   const t = tier(total, viol), hangus = total < cfg.hangus_di_bawah || (total >= 75 && total < 90 && viol);
-  const potongan = Math.max(0, k.ringan * cfg.potongan_telat_ringan + k.berat * cfg.potongan_telat_berat + stok * (Number(cfg.potongan_tidak_update_stok) || 0));
+  const potongan = Math.max(0, k.ringan * cfg.potongan_telat_ringan + k.berat * cfg.potongan_telat_berat + stok * (Number(cfg.potongan_tidak_update_stok) || 0) + k.lupa_pulang * (Number(cfg.potongan_lupa_pulang) || 0));
   return {k, q, pel, sik, ini, viol, stok, total, t, hangus, potongan};
 }

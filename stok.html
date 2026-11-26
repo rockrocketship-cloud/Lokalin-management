@@ -47,7 +47,7 @@ label{font-size:13px;font-weight:650;margin-top:10px}
 .low .stock-state{background:#fff0dc;color:#92501b}
 .stock-bottom button{background:#f6e9dc;color:#8c2722;padding:8px 16px}
 .stock-value{grid-column:1/-1;font-size:12px;color:#806357;border-top:1px solid #f0e6dc;padding-top:10px;line-height:1.5;overflow-wrap:anywhere}
-.stock-extra{grid-column:1/-1;font-size:12px;color:#806357;line-height:1.5;overflow-wrap:anywhere}.wa-btn{display:inline-block;background:#25793f;color:#fff;text-decoration:none;padding:13px 16px;border-radius:12px;margin:3px}.buy-group{border:1px solid #e8dcd0;border-radius:14px;padding:14px;margin:12px 0;background:#fff}.buy-group h3{margin:0 0 4px}.buy-group table{min-width:0}.buy-msg{white-space:pre-wrap;background:#f7efe7;border-radius:10px;padding:10px;font-size:13px;margin:10px 0}.num{text-align:right!important;white-space:nowrap}.price-calc{background:#eef6ee;border-radius:10px;padding:10px;font-size:14px;margin:4px 0 10px}.loss-box{background:#fff0ec;border-radius:10px;padding:10px;margin:10px 0;font-size:14px}.stock-empty{padding:18px;color:#806357;border:1px dashed #d7c6b6;border-radius:12px;text-align:center;font-size:14px}
+.stock-extra{grid-column:1/-1;font-size:12px;color:#806357;line-height:1.5;overflow-wrap:anywhere}.wa-btn{display:inline-block;background:#25793f;color:#fff;text-decoration:none;padding:13px 16px;border-radius:12px;margin:3px}.buy-row{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:6px 10px;align-items:end;padding:10px 0;border-top:1px solid #f0e6dc}.buy-row .stock-meta{display:block}.buy-row label{margin:0;font-size:13px}.buy-row input{margin:4px 0 0}.buy-est{grid-column:1/-1;font-size:13px;color:#806357;text-align:right}.buy-sub{text-align:right;font-weight:700;margin:6px 0}.buy-group{border:1px solid #e8dcd0;border-radius:14px;padding:14px;margin:12px 0;background:#fff}.buy-group h3{margin:0 0 4px}.buy-group table{min-width:0}.buy-msg{white-space:pre-wrap;background:#f7efe7;border-radius:10px;padding:10px;font-size:13px;margin:10px 0}.num{text-align:right!important;white-space:nowrap}.price-calc{background:#eef6ee;border-radius:10px;padding:10px;font-size:14px;margin:4px 0 10px}.loss-box{background:#fff0ec;border-radius:10px;padding:10px;margin:10px 0;font-size:14px}.stock-empty{padding:18px;color:#806357;border:1px dashed #d7c6b6;border-radius:12px;text-align:center;font-size:14px}
 .add-item{margin-top:16px;border-top:1px solid #e8dcd0;padding-top:12px}.add-item>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:650;color:#8c2722}
 #message{color:#79241e;font-size:14px;line-height:1.5}#message:not(:empty){background:#fff8e9;border:1px solid #e8d4b9;border-radius:10px;padding:12px}
 .wrap>small{display:block;color:#806357;text-align:center;font-size:12px;margin-top:20px}
@@ -353,19 +353,30 @@ function attachMoveHelpers(form){
   calc.textContent='Harga belanja ini '+rupiah(u)+' per '+it.unit+'. Harga per satuan baru (rata-rata dengan sisa stok): '+rupiah(avg)+'.'};
  ['item','type','qty','total'].forEach(k=>{const el=form.elements.namedItem(k);el.addEventListener('input',upd);el.addEventListener('change',upd)});upd();
 }
+let buyEdits={};
 function buyList(){
  const showPrice=role==='owner';
- const need=filteredItems().filter(needsBuying).map(i=>({i,buy:Math.max(0,targetStock(i)-Number(i.quantity))})).filter(x=>x.buy>0);
+ const need=filteredItems().filter(needsBuying).map(i=>({i,auto:Math.max(0,targetStock(i)-Number(i.quantity))})).filter(x=>x.auto>0);
  const groups=new Map();need.forEach(x=>{const k=x.i.supplier_id||'';if(!groups.has(k))groups.set(k,[]);groups.get(k).push(x)});
- const total=need.reduce((a,x)=>a+x.buy*Number(x.i.purchase_price||0),0);
- let html='<h2>Daftar Belanja '+esc(division)+'</h2><p class="hint">Barang yang stoknya di bawah atau sama dengan minimum. Jumlah beli = target stok − sisa. Barang dengan minimum 0 tidak dimasukkan.</p>';
+ const qty=x=>buyEdits[x.i.id]??x.auto;
+ let html='<h2>Daftar Belanja '+esc(division)+'</h2><p class="hint">Barang yang stoknya di bawah atau sama dengan minimum. Jumlah beli otomatis = target stok − sisa, dan bisa diubah. Isi 0 untuk tidak membeli. Barang dengan minimum 0 tidak dimasukkan.</p>';
  if(!need.length){$('content').innerHTML=html+'<div class="stock-empty">Tidak ada barang yang perlu dibeli.</div>';return}
- html+='<p><b>'+need.length+' barang'+(showPrice?' · perkiraan '+rupiah(total):'')+'</b></p>';
- const texts=[];
- groups.forEach((rows,sid)=>{const s=suppliers.find(x=>x.id===sid),text='Halo'+(s?' '+s.name:'')+', pesanan Lokalin Cafe:\n'+rows.map((x,n)=>(n+1)+'. '+x.i.name+' '+fmt(x.buy)+' '+x.i.unit).join('\n')+'\nTerima kasih.',idx=texts.push({text,phone:waNumber(s?.phone)})-1,sub=rows.reduce((a,x)=>a+x.buy*Number(x.i.purchase_price||0),0);
-  html+='<div class="buy-group"><h3>'+esc(s?s.name:'Belum ada supplier')+'</h3><p class="stock-meta">'+(s?.phone?'WA '+esc(s.phone):s?'Nomor WA belum diisi':'Atur supplier lewat tombol Edit barang')+'</p><div class="scroll"><table><tr><th>Barang</th><th class="num">Sisa</th><th class="num">Beli</th>'+(showPrice?'<th class="num">Perkiraan</th>':'')+'</tr>'+rows.map(x=>'<tr><td>'+esc(x.i.name)+'</td><td class="num">'+fmt(x.i.quantity)+' '+esc(x.i.unit)+'</td><td class="num"><b>'+fmt(x.buy)+' '+esc(x.i.unit)+'</b></td>'+(showPrice?'<td class="num">'+rupiah(x.buy*Number(x.i.purchase_price||0))+'</td>':'')+'</tr>').join('')+(showPrice?'<tr><td colspan="3"><b>Subtotal</b></td><td class="num"><b>'+rupiah(sub)+'</b></td></tr>':'')+'</table></div><div class="buy-msg">'+esc(text)+'</div><button type="button" data-copy="'+idx+'">Salin pesan</button>'+(texts[idx].phone?'<a class="wa-btn" href="https://wa.me/'+texts[idx].phone+'?text='+encodeURIComponent(text)+'" target="_blank" rel="noopener">Kirim ke WhatsApp</a>':'')+'</div>'});
+ html+='<p><b id="buyTotal"></b></p>';
+ const list=[...groups].map(([sid,rows])=>({s:suppliers.find(x=>x.id===sid),rows}));
+ list.forEach((g,gi)=>{
+  html+='<div class="buy-group" data-group="'+gi+'"><h3>'+esc(g.s?g.s.name:'Belum ada supplier')+'</h3><p class="stock-meta">'+(g.s?.phone?'WA '+esc(g.s.phone):g.s?'Nomor WA belum diisi':'Atur supplier lewat tab Stok → tombol Edit barang')+'</p>'+g.rows.map(x=>'<div class="buy-row"><div><b>'+esc(x.i.name)+'</b><span class="stock-meta">Sisa '+fmt(x.i.quantity)+' '+esc(x.i.unit)+' · minimum '+fmt(x.i.minimum_stock)+' · saran '+fmt(x.auto)+'</span></div><label>Beli ('+esc(x.i.unit)+')<input type="number" min="0" step="any" inputmode="decimal" data-buy="'+esc(x.i.id)+'" value="'+qty(x)+'"></label>'+(showPrice?'<span class="buy-est" data-est="'+esc(x.i.id)+'"></span>':'')+'</div>').join('')+(showPrice?'<p class="buy-sub"></p>':'')+'<div class="buy-msg"></div><button type="button" data-copy="'+gi+'">Salin pesan</button><a class="wa-btn hide" target="_blank" rel="noopener">Kirim ke WhatsApp</a></div>'});
  $('content').innerHTML=html;
- document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(texts[b.dataset.copy].text);message('Pesan disalin')}catch(_){message('Gagal menyalin, salin manual dari kotak pesan')}});
+ const textOf=g=>{const rows=g.rows.filter(x=>qty(x)>0);return rows.length?'Halo'+(g.s?' '+g.s.name:'')+', pesanan Lokalin Cafe:\n'+rows.map((x,n)=>(n+1)+'. '+x.i.name+' '+fmt(qty(x))+' '+x.i.unit).join('\n')+'\nTerima kasih.':''};
+ const update=()=>{let total=0,count=0;
+  list.forEach((g,gi)=>{const box=document.querySelector('[data-group="'+gi+'"]'),text=textOf(g),phone=waNumber(g.s?.phone);let sub=0;
+   g.rows.forEach(x=>{const v=qty(x)*Number(x.i.purchase_price||0);sub+=v;if(qty(x)>0)count++;const e=box.querySelector('[data-est="'+x.i.id+'"]');if(e)e.textContent=rupiah(v)});
+   total+=sub;const sb=box.querySelector('.buy-sub');if(sb)sb.textContent='Subtotal '+rupiah(sub);
+   box.querySelector('.buy-msg').textContent=text||'Tidak ada yang dibeli dari supplier ini.';
+   const wa=box.querySelector('.wa-btn');wa.classList.toggle('hide',!phone||!text);if(phone&&text)wa.href='https://wa.me/'+phone+'?text='+encodeURIComponent(text)});
+  $('buyTotal').textContent=count+' barang dibeli'+(showPrice?' · perkiraan '+rupiah(total):'')};
+ document.querySelectorAll('[data-buy]').forEach(inp=>inp.addEventListener('input',()=>{const v=Number(inp.value);if(inp.value===''||!Number.isFinite(v)||v<0)delete buyEdits[inp.dataset.buy];else buyEdits[inp.dataset.buy]=v;update()}));
+ document.querySelectorAll('[data-copy]').forEach(b=>b.onclick=async()=>{const t=textOf(list[b.dataset.copy]);if(!t)return message('Tidak ada yang dibeli dari supplier ini');try{await navigator.clipboard.writeText(t);message('Pesan disalin')}catch(_){message('Gagal menyalin, salin manual dari kotak pesan')}});
+ update();
 }
 async function usageReport(){
  const out=$('usageOut');if(!out)return;

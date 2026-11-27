@@ -87,14 +87,15 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #ee
 <form id="memberCreate"><label for="newCode">Kode member baru</label><input id="newCode" required pattern="[A-Za-z0-9\-]{3,24}" maxlength="24" placeholder="Contoh LKL-002">
 <label for="newName">Nama member</label><input id="newName" maxlength="60" required>
 <label for="newPhone">No. HP</label><input id="newPhone" type="tel" inputmode="tel" maxlength="20" required placeholder="08xxxxxxxxxx"><button>Daftarkan</button></form></details>
-<section id="memberResult" hidden><article id="stampCard"><img id="stampLogo" alt="Lokalin Cafe">
+<section id="memberResult" hidden>
+<button id="rodaOpen" type="button">Roda Putar</button>
+<article id="stampCard"><img id="stampLogo" alt="Lokalin Cafe">
 <strong id="cardName"></strong><small id="cardCode"></small><div id="stampDots" aria-hidden="true"></div><b id="stampBalance"></b></article>
 <form id="memberPhone"><label for="cardPhone">No. HP</label><input id="cardPhone" type="tel" inputmode="tel" maxlength="20" placeholder="08xxxxxxxxxx"><button>Simpan No. HP</button></form>
 <button id="qrShow" type="button">Tampilkan QR pelanggan</button>
 <div id="qrPanel" hidden><div id="qrImage"></div><p id="qrNote" role="status"></p><a id="qrLink" hidden>Buka kartu pelanggan</a></div>
 <form id="memberStamp"><label for="receiptNo">Nomor struk unik</label><input id="receiptNo" required maxlength="80" placeholder="Nomor lengkap pada struk"><button id="stampBtn">Tambah 1 stamp</button></form>
-<button id="memberRedeem" type="button">Tukar 7 stamp · 1 minuman</button>
-<button id="rodaOpen" type="button">Roda Putar</button></section>
+<button id="memberRedeem" type="button">Tukar 7 stamp · 1 minuman</button></section>
 <p id="memberMessage" role="status" aria-live="polite"></p></dialog>
 <dialog id="rodaBox" aria-labelledby="rodaTitle">
 <button type="button" id="rodaClose">Tutup</button><h2 id="rodaTitle">Roda Putar Lokalin</h2>

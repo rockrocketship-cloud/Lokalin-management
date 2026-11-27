@@ -2667,10 +2667,10 @@ const RODA_SEGMENTS=[
   {label:'COBA LAGI',bg:'#A3232B',fg:'#F3EBDD'},
   {label:'+2 STAMP',stamps:2,bg:'#2B211C',fg:'#F3EBDD'},
   {label:'+1 STAMP',stamps:1,bg:'#F3EBDD',fg:'#A3232B'},
-  {label:'ROTI KUKUS',bg:'#C98B4A',fg:'#2B211C'},
+  {label:'ROTI KUKUS',message:'Gratis 1 roti kukus, berikan ke member.',bg:'#C98B4A',fg:'#2B211C'},
   {label:'COBA LAGI',bg:'#A3232B',fg:'#F3EBDD'},
   {label:'+1 STAMP',stamps:1,bg:'#F3EBDD',fg:'#A3232B'},
-  {label:'COBA LAGI',bg:'#2B211C',fg:'#F3EBDD'},
+  {label:'KOPI GRATIS',message:'Gratis 1 kopi, berikan ke member.',bg:'#2B211C',fg:'#F3EBDD'},
 ];
 const RODA_SEG=2*Math.PI/RODA_SEGMENTS.length;
 const rodaBox=$('rodaBox');
@@ -2745,7 +2745,7 @@ async function spinRoda(){
         $('rodaResult').textContent=prize.label+'\nStamp belum tentu tercatat: '+(err.message||'Koneksi terputus.')+'\nCari ulang member, periksa saldo, lalu tambahkan kekurangannya secara manual.';
       }
     }else{
-      $('rodaResult').textContent=prize.label+'\n'+(prize.label==='ROTI KUKUS'?'Gratis 1 roti kukus, berikan ke member.':'Belum beruntung. Coba lagi di kunjungan berikutnya.');
+      $('rodaResult').textContent=prize.label+'\n'+(prize.message||'Belum beruntung. Coba lagi di kunjungan berikutnya.');
     }
     $('memberMessage').textContent='Roda Putar '+card.code+': '+$('rodaResult').textContent.replaceAll('\n',' · ');
   }finally{

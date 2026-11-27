@@ -82,7 +82,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #ee
 <form id="memberPhone"><label for="cardPhone">No. HP</label><input id="cardPhone" type="tel" inputmode="tel" maxlength="20" placeholder="08xxxxxxxxxx"><button>Simpan No. HP</button></form>
 <button id="qrShow" type="button">Tampilkan QR pelanggan</button>
 <div id="qrPanel" hidden><div id="qrImage"></div><p id="qrNote" role="status"></p><a id="qrLink" hidden>Buka kartu pelanggan</a></div>
-<form id="memberStamp"><label for="receiptNo">Nomor struk unik</label><input id="receiptNo" required maxlength="80" placeholder="Nomor lengkap pada struk"><button>Tambah 1 stamp</button></form>
+<form id="memberStamp"><label for="receiptNo">Nomor struk unik</label><input id="receiptNo" required maxlength="80" placeholder="Nomor lengkap pada struk"><button id="stampBtn">Tambah 1 stamp</button></form>
 <button id="memberRedeem" type="button">Tukar 7 stamp · 1 minuman</button></section>
 <p id="memberMessage" role="status" aria-live="polite"></p></dialog>
 </main><section id="guestView" hidden><h1>Kartu Member Lokalin</h1><div id="guestCard"></div><p id="guestStatus" role="status"></p><button id="guestRefresh">Perbarui saldo</button></section>
@@ -2586,7 +2586,7 @@ async function applyMember(action){
       try{await loadMemberPhone(data.code)}catch(_){ /* stamp_card tidak mengembalikan phone; biarkan kosong jika RPC belum ada */ }
     }
     $('memberRegistration').open=false;
-    $('memberMessage').textContent={get:'',create:'Member berhasil didaftarkan.',stamp:'1 stamp ditambahkan.',redeem:'7 stamp ditukar dengan 1 minuman gratis.'}[action];
+    $('memberMessage').textContent={get:'',create:'Member berhasil didaftarkan.',stamp:data.added===2?'2 stamp ditambahkan (promo ngopi siang).':'1 stamp ditambahkan.',redeem:'7 stamp ditukar dengan 1 minuman gratis.'}[action];
   }catch(err){
     showCard(null);
     $('memberMessage').textContent=err.code==='PGRST202'?'Fitur belum aktif. Jalankan member.sql di Supabase.':err.message||'Koneksi terputus. Cari ulang member untuk memeriksa saldo.';
@@ -2601,6 +2601,9 @@ for(const [id,action] of [['memberFind','search'],['memberCreate','create'],['me
   $(id).onsubmit=e=>{e.preventDefault();applyMember(action)};
 }
 $('memberRedeem').onclick=()=>applyMember('redeem');
+// Promo ngopi siang: 13.00-15.59 WITA = 2 stamp (ditentukan server; label ini hanya petunjuk).
+function syncStampPromo(){const h=+new Intl.DateTimeFormat('en-GB',{hour:'2-digit',hourCycle:'h23',timeZone:'Asia/Makassar'}).format(new Date());$('stampBtn').textContent=h>=13&&h<16?'Tambah 2 stamp (promo ngopi siang)':'Tambah 1 stamp';}
+syncStampPromo();setInterval(syncStampPromo,60000);
 // Aturan sama dengan lokalin_normalize_phone di SQL; RPC tetap penentu akhir.
 function normalizePhone(v){
   let d=String(v||'').replace(/\D/g,'');

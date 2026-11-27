@@ -1,0 +1,7 @@
+-- Promo "ngopi siang, stamp dobel": stamp yang ditambahkan jam 13.00-15.59 WITA bernilai 2.
+-- Sudah diterapkan di Supabase (migrasi lokalin_stamp_promo_ngopi_siang, 27 Nov 2026).
+-- Perubahan pada public.lokalin_stamp_card:
+--   * kolom baru lokalin_stamp_events.amount (stamp = 1 atau 2, redeem = 7)
+--   * aksi 'stamp' menambah saldo 2 bila jam Asia/Makassar 13 <= jam < 16, selain itu 1
+--   * hasil aksi 'stamp' menyertakan field "added" (1 atau 2) untuk pesan di dashboard
+-- Untuk mengubah/mematikan promo, ubah kondisi v_hour di fungsi lokalin_stamp_card.

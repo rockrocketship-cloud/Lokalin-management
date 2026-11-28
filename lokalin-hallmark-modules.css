@@ -1,0 +1,85 @@
+/* Hallmark · scope: app · Lokalin operations · shared module system */
+/* Critique: prioritize the existing action in each module; keep transactional states and routes intact. */
+:root {
+  --lm-paper:#f8f0e0; --lm-surface:#fffaf1; --lm-ink:#341e1d; --lm-muted:#70544b;
+  --lm-red:#a52329; --lm-dark:#771b23; --lm-line:#e2ccbb; --lm-shade:#efdcca;
+  --lm-focus:#902329; --lm-cream:#fff2da;
+  --lm-title:Georgia,serif; --lm-body:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --lm-pad:clamp(16px,4vw,36px); --lm-max:1120px;
+}
+
+body[data-lokalin-module] {background:var(--lm-paper);color:var(--lm-ink);font-family:var(--lm-body)}
+body[data-lokalin-module] header:is(body>header,main>header) {
+  background:var(--lm-dark);color:var(--lm-cream);border:0;border-radius:0;
+  box-shadow:none;padding-block:clamp(17px,3vw,26px);text-align:left;
+}
+body[data-lokalin-module] > header:not(:has(>.wrap)) {padding-inline:max(var(--lm-pad), calc((100% - var(--lm-max))/2 + var(--lm-pad)))}
+body[data-lokalin-module] header h1,body[data-lokalin-module] main h1 {
+  font:400 clamp(26px,4vw,36px)/1.1 var(--lm-title);letter-spacing:-.035em;min-width:0;overflow-wrap:break-word;
+}
+body[data-lokalin-module] header h1 {margin-block:8px}
+body[data-lokalin-module] :is(h2,h3) {font-family:var(--lm-title);letter-spacing:-.02em;line-height:1.22;overflow-wrap:break-word}
+body[data-lokalin-module] header :is(.muted,.lede,.sub,.kicker) {color:var(--lm-cream);opacity:1}
+body[data-lokalin-module] header :is(.kicker,.back) {text-transform:none;letter-spacing:normal}
+body[data-lokalin-module] :is(.panel,section.card,main.card) {
+  background:var(--lm-surface);border:1px solid var(--lm-line);border-radius:9px;box-shadow:none;
+  padding:clamp(15px,3vw,26px);min-width:0;
+}
+body[data-lokalin-module] :is(.muted,.hint,.sub) {color:var(--lm-muted)}
+body[data-lokalin-module] header :is(.muted,.hint,.sub) {color:var(--lm-cream)}
+body[data-lokalin-module] :is(input:not([type=checkbox],[type=radio],[type=range],[type=file]),select,textarea) {
+  border-color:var(--lm-line);border-radius:7px;min-height:44px;font-size:16px;max-width:100%;min-width:0;
+}
+body[data-lokalin-module] button {min-height:44px;border-radius:7px}
+body[data-lokalin-module] :is(button.primary,button[type=submit]:not(.secondary,.light,.outline)) {background:var(--lm-red);color:var(--lm-surface)}
+body[data-lokalin-module] :is(button,a,input,select,textarea,summary):focus-visible {outline:3px solid var(--lm-focus);outline-offset:2px}
+body[data-lokalin-module] header :is(button,a):focus-visible {outline-color:var(--lm-cream)}
+body[data-lokalin-module] :is(.scroll,.tablewrap,.table-wrap) {max-width:100%;overflow-x:auto}
+body[data-lokalin-module] th {text-transform:none;letter-spacing:normal}
+body[data-lokalin-module] > main:not(.card) {margin-top:0;padding-top:var(--lm-pad);min-width:0}
+body[data-lokalin-module] :is(.field,.stat,.kpi,.row) {min-width:0}
+
+/* Staff workflows: form first, then the operational record. */
+body[data-lokalin-module=absensi] #kiosk {gap:16px}
+body[data-lokalin-module=absensi] :is(#staffHistoryPanel,#dwPanel) {margin-block:18px}
+body[data-lokalin-module=absensi] :is(.toolbar,.actions) {align-items:end;row-gap:8px}
+body[data-lokalin-module=booking-vip] main.wrap>#app>.grid {gap:16px}
+body[data-lokalin-module=booking-vip] header .brand {width:clamp(96px,20vw,150px);height:auto}
+body[data-lokalin-module=booking-vip] #app>.grid>section.card {margin:0}
+body[data-lokalin-module=booking-vip] :is(#authStatus,#authHelp) {max-width:480px;margin-inline:auto}
+@media(min-width:920px){body[data-lokalin-module=booking-vip] main.wrap>#app>.grid {grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr)}}
+body[data-lokalin-module=stok] main.wrap>header {border-radius:7px;padding-inline:var(--lm-pad)}
+body[data-lokalin-module=stok] :is(.top-nav,.division-tabs,.tabs) {gap:7px}
+body[data-lokalin-module=stok] :is(.top-nav,.division-tabs,.tabs) :is(button,a) {min-height:44px}
+body[data-lokalin-module=ketersediaan-menu] > main {margin-top:0}
+body[data-lokalin-module=room-service] .rooms {gap:12px}
+body[data-lokalin-module=room-service] :is(.history,.guest-qr) {background:var(--lm-surface);border:1px solid var(--lm-line);border-radius:9px;padding:var(--lm-pad)}
+body[data-lokalin-module=pos] main.layout {gap:16px;align-items:start}
+@media(min-width:1100px){body[data-lokalin-module=pos] main.layout {grid-template-columns:minmax(0,1.65fr) minmax(320px,1fr)}}
+
+/* Owner screens: distinguish figures, filters and historical records. */
+body:is([data-lokalin-module=laporan-harian],[data-lokalin-module=lokalin-laporan-owner],[data-lokalin-module=owner-report],[data-lokalin-module=moka-pos],[data-lokalin-module=payroll],[data-lokalin-module=penilaian]) :is(.stat,.kpi) {
+  background:var(--lm-surface);border:1px solid var(--lm-line);border-radius:7px;
+  font-variant-numeric:tabular-nums;overflow-wrap:anywhere;
+}
+body[data-lokalin-module=laporan-harian] #reportForm>.panel {margin-block:0 15px}
+@media(min-width:800px){
+  body[data-lokalin-module=laporan-harian] #reportForm {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;align-items:start}
+  body[data-lokalin-module=laporan-harian] #reportForm>*:not(.panel),
+  body[data-lokalin-module=laporan-harian] #reportForm>.panel:first-child {grid-column:1/-1}
+}
+body[data-lokalin-module=laporan-harian] #history {margin-top:24px}
+body[data-lokalin-module=owner-report] :is(#sales,#transactions,#invoices,#shift) {margin-top:16px}
+body[data-lokalin-module=payroll] .scroll, body[data-lokalin-module=penilaian] .scroll {margin-top:10px}
+
+/* Guest screens keep one clear action and no staff-only decoration. */
+body[data-lokalin-module=panggil-server] main {width:min(calc(100% - 32px),480px);margin-inline:auto}
+body[data-lokalin-module=panggil-server] main.card button {background:var(--lm-red);color:var(--lm-surface);min-height:52px}
+body[data-lokalin-module=tes-suara] main {margin-inline:auto}
+@media(max-width:600px){
+  body[data-lokalin-module] header:is(body>header,main>header){background-image:none}
+  body[data-lokalin-module] >header .wrap {padding-inline:var(--lm-pad)}
+  body[data-lokalin-module] :is(.actions,.toolbar) {flex-wrap:wrap}
+  body[data-lokalin-module] :is(.actions,.toolbar)>* {max-width:100%}
+}
+@media(prefers-reduced-motion:reduce){body[data-lokalin-module] :is(button,a) {transition:none}}
